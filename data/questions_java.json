@@ -1,0 +1,60 @@
+{
+  "discipline": "Java",
+  "questions": [
+    {
+      "enonce": "Quel mot-clé permet à une classe d'hériter d'une autre classe ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "extends", "correct": true },
+        { "texte": "implements", "correct": false },
+        { "texte": "inherits", "correct": false },
+        { "texte": "super", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Parmi ces types, lesquels sont des types primitifs en Java ?",
+      "type": "checkbox",
+      "temps_limite_sec": 45,
+      "choix": [
+        { "texte": "int", "correct": true },
+        { "texte": "boolean", "correct": true },
+        { "texte": "String", "correct": false },
+        { "texte": "double", "correct": true }
+      ]
+    },
+    {
+      "enonce": "Qu'affiche System.out.println(10 / 4); ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "2", "correct": true },
+        { "texte": "2.5", "correct": false },
+        { "texte": "2.0", "correct": false },
+        { "texte": "3", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Quelle méthode est le point d'entrée d'un programme Java ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "public static void main(String[] args)", "correct": true },
+        { "texte": "public void start()", "correct": false },
+        { "texte": "static int main()", "correct": false },
+        { "texte": "public static void run(String args)", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Quelles affirmations sur les interfaces Java sont vraies ?",
+      "type": "checkbox",
+      "temps_limite_sec": 60,
+      "choix": [
+        { "texte": "Une classe peut implémenter plusieurs interfaces", "correct": true },
+        { "texte": "Une interface peut contenir des méthodes default (depuis Java 8)", "correct": true },
+        { "texte": "Une interface peut avoir un constructeur", "correct": false },
+        { "texte": "On peut créer un objet directement avec new NomInterface()", "correct": false }
+      ]
+    }
+  ]
+}
