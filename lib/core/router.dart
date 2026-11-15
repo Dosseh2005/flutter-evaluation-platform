@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/admin/admin_home_page.dart';
 import '../features/admin/questions/questions_page.dart';
+import '../features/admin/tableau_de_bord/tableau_de_bord_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/auth/register_page.dart';
 import '../features/candidat/profil_page.dart';
@@ -72,10 +73,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.adminTableauDeBord,
-        builder: (context, state) => const AdminPageAVenir(
-          titre: 'Tableau de bord',
-          us: 'US6 – Tableau de bord des résultats',
-        ),
+        builder: (context, state) => const TableauDeBordPage(),
       ),
       GoRoute(
         path: Routes.adminStatistiques,
