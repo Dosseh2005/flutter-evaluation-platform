@@ -150,6 +150,89 @@ class _TableauResultats extends StatelessWidget {
   Widget build(BuildContext context) {
     final format = DateFormat('dd/MM/yyyy HH:mm');
     final theme = Theme.of(context);
+    final compteur = Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        '${resultats.length} résultat(s)'
+        '${resultats.length == limiteResultats ? ' (les $limiteResultats plus récents)' : ''}',
+        style: theme.textTheme.bodySmall,
+      ),
+    );
+
+    // Téléphone : une fiche par résultat au lieu d'un tableau coupé.
+    if (MediaQuery.sizeOf(context).width < 700) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          compteur,
+          Panneau(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < resultats.length; i++) ...[
+                  if (i > 0) const Divider(),
+                  Semantics(
+                    container: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${resultats[i].prenom} ${resultats[i].nom}',
+                                  style: theme.textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  resultats[i].discipline,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                Text(
+                                  format.format(resultats[i].date),
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${resultats[i].score}/${resultats[i].total}',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontFeatures: chiffresAlignes,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              estReussi(resultats[i].score, resultats[i].total)
+                                  ? const Pastille(
+                                      'Réussi',
+                                      ton: TonPastille.reussite,
+                                    )
+                                  : const Pastille(
+                                      'Échoué',
+                                      ton: TonPastille.alerte,
+                                    ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

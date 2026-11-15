@@ -158,39 +158,50 @@ class _LigneTest extends StatelessWidget {
       );
     }
 
+    final infos = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(test.discipline, style: theme.textTheme.titleLarge),
+            ?statut,
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          sousTitre,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: Couleurs.texteSecondaire,
+          ),
+        ),
+      ],
+    );
+
+    // Sur téléphone, le bouton passe sous le texte, en pleine largeur
+    // (plus facile à toucher avec le pouce).
+    final telephone = MediaQuery.sizeOf(context).width < 520;
     return Semantics(
       container: true,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        padding: EdgeInsets.symmetric(
+          horizontal: telephone ? 18 : 24,
+          vertical: telephone ? 18 : 20,
+        ),
+        child: telephone
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [infos, const SizedBox(height: 14), bouton],
+              )
+            : Row(
                 children: [
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(test.discipline, style: theme.textTheme.titleLarge),
-                      ?statut,
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    sousTitre,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Couleurs.texteSecondaire,
-                    ),
-                  ),
+                  Expanded(child: infos),
+                  const SizedBox(width: 16),
+                  bouton,
                 ],
               ),
-            ),
-            const SizedBox(width: 16),
-            bouton,
-          ],
-        ),
       ),
     );
   }

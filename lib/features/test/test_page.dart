@@ -291,9 +291,15 @@ class _EcranQuestion extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 20),
+          // Sur téléphone : bouton en pleine largeur, facile à toucher.
           Align(
             alignment: Alignment.centerRight,
             child: FilledButton(
+              style: MediaQuery.sizeOf(context).width < 600
+                  ? FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                    )
+                  : null,
               onPressed: envoiEnCours || selection.isEmpty ? null : valider,
               child: Text(
                 envoiEnCours

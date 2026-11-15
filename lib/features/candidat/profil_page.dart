@@ -88,27 +88,38 @@ class _Informations extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget ligne(String libelle, String valeur) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              libelle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Couleurs.texteSecondaire,
+    // Sur téléphone, le libellé passe au-dessus de la valeur : l'email
+    // garde toute la largeur et n'est pas coupé au milieu.
+    final telephone = MediaQuery.sizeOf(context).width < 520;
+    Widget ligne(String libelle, String valeur) {
+      final etiquette = Text(
+        libelle,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: Couleurs.texteSecondaire,
+        ),
+      );
+      final contenu = Text(valeur, style: theme.textTheme.bodyLarge);
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: telephone ? 6 : 8),
+        child: telephone
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [etiquette, const SizedBox(height: 2), contenu],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 110, child: etiquette),
+                  Expanded(child: contenu),
+                ],
               ),
-            ),
-          ),
-          Expanded(child: Text(valeur, style: theme.textTheme.bodyLarge)),
-        ],
-      ),
-    );
+      );
+    }
+
     return Panneau(
       titre: 'Mes informations',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ligne('Nom', profil.nom),
           ligne('Prénom', profil.prenom),

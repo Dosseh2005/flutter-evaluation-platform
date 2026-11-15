@@ -256,7 +256,14 @@ class CarteCamembert extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 60),
                     child: Text('Aucun test cette année'),
                   )
-                : Camembert(stat: stat, taille: grand ? 240 : 160),
+                : Camembert(
+                    stat: stat,
+                    taille: !grand
+                        ? 160
+                        : MediaQuery.sizeOf(context).width < 520
+                        ? 200
+                        : 240,
+                  ),
           ),
           const SizedBox(height: 20),
           Text(
@@ -280,25 +287,48 @@ class LigneDiscipline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Téléphone : camembert plus petit, pourcentage à côté du nom.
+    final taille = MediaQuery.sizeOf(context).width < 520 ? 64.0 : 96.0;
+    final pourcentage = stat.nbTests == 0
+        ? null
+        : Text(
+            '${stat.tauxReussite.round()} %',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: stat.tauxReussite >= seuilReussite * 100
+                  ? couleurReussi
+                  : couleurEchoue,
+              fontFeatures: chiffresAlignes,
+            ),
+          );
     return Semantics(
       container: true,
       child: Row(
         children: [
           stat.nbTests == 0
-              ? const SizedBox(width: 96, height: 96)
-              : Camembert(stat: stat, taille: 96),
-          const SizedBox(width: 24),
+              ? SizedBox(width: taille, height: taille)
+              : Camembert(stat: stat, taille: taille),
+          SizedBox(width: taille < 96 ? 16 : 24),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(stat.discipline, style: theme.textTheme.titleMedium),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        stat.discipline,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    ?pourcentage,
+                  ],
+                ),
                 const SizedBox(height: 4),
                 Text(
                   stat.nbTests == 0
                       ? 'Aucun test cette année'
-                      : '${stat.nbTests} test(s) passé(s) : '
-                            '${stat.nbReussis} réussi(s), ${stat.nbEchoues} échoué(s)',
+                      : '${stat.nbTests} test(s) : ${stat.nbReussis} réussi(s), '
+                            '${stat.nbEchoues} échoué(s)',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Couleurs.texteSecondaire,
                   ),
@@ -306,16 +336,6 @@ class LigneDiscipline extends StatelessWidget {
               ],
             ),
           ),
-          if (stat.nbTests > 0)
-            Text(
-              '${stat.tauxReussite.round()} %',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: stat.tauxReussite >= seuilReussite * 100
-                    ? couleurReussi
-                    : couleurEchoue,
-                fontFeatures: chiffresAlignes,
-              ),
-            ),
         ],
       ),
     );

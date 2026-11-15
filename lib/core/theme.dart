@@ -172,6 +172,8 @@ ThemeData construireTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Couleurs.surface,
+      // Survol très léger : un gris foncé faisait croire à un champ désactivé.
+      hoverColor: const Color(0xFFFAFBFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: bordure,
       enabledBorder: bordure,
