@@ -15,14 +15,31 @@ import 'session.dart';
 
 /// Noms des routes, pour éviter les fautes de frappe dans les `context.go`.
 abstract final class Routes {
+  /// Écran d'attente pendant la lecture du rôle.
   static const chargement = '/chargement';
+
+  /// Connexion (candidat et admin) – US1, US4.
   static const login = '/login';
+
+  /// Inscription d'un candidat – US1.
   static const register = '/register';
+
+  /// Liste des tests du candidat – US2.
   static const tests = '/tests';
+
+  /// Profil du candidat – US3.
   static const profil = '/profil';
+
+  /// Accueil administrateur – US4.
   static const admin = '/admin';
+
+  /// Gestion des questions – US5.
   static const adminQuestions = '/admin/questions';
+
+  /// Tableau de bord des résultats – US6.
   static const adminTableauDeBord = '/admin/tableau-de-bord';
+
+  /// Statistiques en camemberts – US7.
   static const adminStatistiques = '/admin/statistiques';
 
   /// Page de passage du test d'une discipline, ex : `/test/2`.

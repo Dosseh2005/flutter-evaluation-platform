@@ -7,7 +7,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_client.dart';
 
 /// Rôle d'un utilisateur, lu dans la colonne `profiles.role`.
-enum Role { candidat, admin }
+enum Role {
+  /// Candidat : passe les tests et consulte son profil.
+  candidat,
+
+  /// Administrateur : gère les questions et consulte les résultats.
+  admin,
+}
 
 /// Suit l'utilisateur connecté et son rôle.
 ///

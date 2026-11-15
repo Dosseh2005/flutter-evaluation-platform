@@ -14,12 +14,24 @@ Suivi des tâches : [Tableau Trello – Plateforme d'évaluation EduScrum](https
 | *(Prénom Nom)* | Développeur |
 | *(Prénom Nom)* | Développeur |
 
+## Fonctionnalités (User Stories)
+
+| US | Qui | Ce qu'on peut faire | Écran |
+|---|---|---|---|
+| US1 | Candidat | Créer un compte (nom, prénom, email, âge, adresse, motivation, mot de passe) ; erreurs claires si un champ manque ou si le compte existe déjà | `/register` |
+| US2 | Candidat | Passer chaque test **une seule fois**, une question à la fois, avec compte à rebours ; à 0 la réponse part automatiquement ; score à la fin | `/tests`, `/test/:id` |
+| US3 | Candidat | Voir son profil et ses scores ; modifier **seulement** l'adresse et la motivation | `/profil` |
+| US4 | Admin | Se connecter avec un compte pré-existant ; un candidat ne peut pas accéder à l'admin | `/login`, `/admin` |
+| US5 | Admin | Ajouter / modifier / supprimer des questions (Radio ou Checkbox, bonnes réponses, temps limite) ; réinitialiser une discipline par fichier JSON | `/admin/questions` |
+| US6 | Admin | Derniers résultats, recherche par nom / prénom, filtre par année scolaire | `/admin/tableau-de-bord` |
+| US7 | Admin | Camembert de réussite par discipline + camembert général, par année scolaire | `/admin/statistiques` |
+
 ## Technologies
 
 | Besoin | Outil |
 |---|---|
 | Application (Web + Android) | Flutter / Dart |
-| Base de données + comptes | Supabase (PostgreSQL, Auth, Row Level Security) |
+| Backend : base de données, comptes, logique serveur | Supabase (PostgreSQL, Auth, Row Level Security, fonctions SQL) |
 | Gestion de l'état | flutter_riverpod |
 | Navigation | go_router |
 | Camemberts | fl_chart |
@@ -30,130 +42,140 @@ Suivi des tâches : [Tableau Trello – Plateforme d'évaluation EduScrum](https
 
 ```
 lib/
-  core/            thème, router, client Supabase, utilitaires
+  main.dart                 démarrage : connexion Supabase + application
+  core/                     commun à toute l'appli
+    supabase_client.dart    clés (env.json) et raccourci `supabase`
+    session.dart            utilisateur connecté + rôle
+    router.dart             routes + garde de route selon le rôle
+    widgets.dart            squelettes de pages, chargement, messages
+    erreurs.dart            erreurs traduites en français
+    annee_scolaire.dart     calcul de l'année scolaire (septembre → août)
+    disciplines.dart        lecture des disciplines
   features/
-    auth/          inscription, connexion (US1, US4)
-    candidat/      liste des tests, profil (US3)
-    test/          passage d'un test, chronomètre (US2)
-    admin/         questions, import JSON, tableau de bord, stats (US5, US6, US7)
-  main.dart
-supabase/schema.sql       script complet de la base
-data/questions_java.json  exemple de fichier d'import
+    auth/                   US1, US4 : inscription, connexion, validations
+    candidat/               US2, US3 : « Mes tests », profil
+    test/                   US2 : passage d'un test + chronomètre
+    admin/                  US4 : menu admin
+      questions/            US5 : formulaire, liste, import JSON
+      tableau_de_bord/      US6 : résultats, recherche, filtre
+      statistiques/         US7 : camemberts
+test/                       un fichier de tests par US
+supabase/
+  schema.sql                tables, sécurité (RLS), fonctions – à exécuter en 1er
+  migration_002.sql         compléments (US2, US5) – à exécuter en 2e
+  donnees_demo.sql          questions + candidats + résultats de démo (facultatif)
+  verif_securite_us4.sql    vérifie qu'un candidat ne peut rien faire d'admin
+data/                       fichiers JSON d'import (5 questions par discipline)
+docs/soutenance.md          plan des slides + scénario de démo
 ```
 
 ---
 
-## Installation (à faire UNE fois par la personne qui crée le projet)
-
-### 1. Créer le projet Flutter dans ce dépôt
-
-```bash
-git clone https://github.com/VOTRE-COMPTE/flutter-evaluation-platform.git
-cd flutter-evaluation-platform
-flutter create --org com.equipe --project-name evaluation_app --platforms web,android .
-flutter pub add supabase_flutter flutter_riverpod go_router fl_chart file_picker intl
-```
-
-Ajouter cette ligne à la fin du fichier `.gitignore` (généré par Flutter) pour ne jamais publier les clés :
-
-```
-env.json
-```
-
-Puis :
-
-```bash
-git add .
-git commit -m "chore: initialisation du projet Flutter"
-git push
-git checkout -b develop
-git push -u origin develop
-```
-
-Sur GitHub : **Settings > Branches > Add rule** sur `main` et cocher *Require a pull request before merging*.
-
-### 2. Créer la base Supabase
+## Installation de la base Supabase (une seule fois, par une personne)
 
 1. Créer un projet gratuit sur https://supabase.com et inviter les coéquipiers (**Organization > Team**).
-2. **Authentication > Sign In / Providers > Email** : désactiver *Confirm email* (sinon chaque candidat doit valider un email avant de pouvoir se connecter).
-3. **SQL Editor** : coller tout le contenu de `supabase/schema.sql` puis **Run**.
-4. **Compte admin (US4)** : **Authentication > Users > Add user** (email + mot de passe, cocher *Auto Confirm User*), puis dans le SQL Editor :
+2. **Authentication > Sign In / Providers > Email** : désactiver *Confirm email* puis **Save** (sinon chaque candidat doit valider un email avant de pouvoir se connecter).
+3. **SQL Editor > New query** : coller **tout** `supabase/schema.sql` puis **Run** → *Success*.
+4. **SQL Editor > New query** : coller **tout** `supabase/migration_002.sql` puis **Run** → *Success*.
+5. **Compte admin (US4)** : **Authentication > Users > Add user > Create new user** (email + mot de passe, cocher *Auto Confirm User*), puis dans le SQL Editor (remplacer l'email) :
 
-```sql
-insert into public.profiles (id, nom, prenom, email, role)
-select id, 'Admin', 'Plateforme', email, 'admin'
-  from auth.users where email = 'admin@exemple.fr';
-```
+   ```sql
+   insert into public.profiles (id, nom, prenom, email, role)
+   select id, 'Admin', 'Plateforme', email, 'admin'
+     from auth.users where email = 'admin@evaluation.fr'
+   on conflict (id) do update set role = 'admin';
+   ```
+
+6. *(Facultatif, recommandé pour la démo)* coller `supabase/donnees_demo.sql` puis **Run** : ajoute 5 questions par discipline, 8 candidats et leurs résultats sur 2 années scolaires.
+7. *(Vérification US4)* coller `supabase/verif_securite_us4.sql` puis **Run** : toutes les lignes de l'onglet *Messages* doivent commencer par **OK**.
+
+### Comptes de démonstration
+
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| Admin | celui créé à l'étape 5 (ex : `admin@evaluation.fr`) | choisi à l'étape 5 |
+| Candidats (si `donnees_demo.sql` exécuté) | `lea.bernard@demo.fr`, `hugo.petit@demo.fr`, `ines.fournier@demo.fr`, `tom.girard@demo.fr`… | `Demo1234!` |
+
+> Les candidats de démo ont déjà passé certains tests : pour tester l'US2 de bout en bout, inscrivez un **nouveau** candidat depuis l'appli.
 
 ---
 
 ## Lancer l'application (chaque membre)
 
-1. Copier `env.example.json` en `env.json`.
-2. Y mettre l'URL et la clé **anon / publishable** du projet (Supabase : **Project Settings > API**). Ne jamais utiliser la clé `service_role` dans l'appli.
+1. Copier `env.example.json` en `env.json` (ce fichier n'est **jamais** envoyé sur GitHub).
+2. Y mettre l'URL et la clé **anon / publishable** du projet (Supabase : **Project Settings > API Keys**). Ne jamais utiliser la clé `service_role` / `secret`.
 3. Lancer :
 
-```bash
-flutter run -d chrome --dart-define-from-file=env.json
-```
+   ```bash
+   flutter pub get
+   flutter run -d chrome --dart-define-from-file=env.json
+   ```
 
-La connexion à Supabase est faite dans `lib/core/supabase_client.dart` (appelée par `main.dart`). Partout dans l'appli, utiliser le raccourci `supabase` (ex : `supabase.from('profiles')`). Sans `env.json`, l'appli affiche un écran qui explique quoi faire au lieu de planter.
+Sans `env.json`, l'appli affiche un écran qui explique quoi faire au lieu de planter.
 
-### Navigation (`lib/core/router.dart`)
+### Navigation et sécurité de l'interface (`lib/core/router.dart`)
 
-| Route | Page | Accès |
-|---|---|---|
-| `/login`, `/register` | connexion, inscription | non connecté |
-| `/tests`, `/profil`, `/test/:id` | candidat | candidat connecté |
-| `/admin` | administration | admin uniquement |
+| Route | Accès |
+|---|---|
+| `/login`, `/register` | non connecté |
+| `/tests`, `/test/:id`, `/profil` | candidat connecté |
+| `/admin`, `/admin/questions`, `/admin/tableau-de-bord`, `/admin/statistiques` | admin uniquement |
 
-La garde de route (`calculerRedirection`) renvoie automatiquement chacun vers la bonne page selon son rôle (`profiles.role`). Elle est testée dans `test/widget_test.dart`.
+La garde de route (`calculerRedirection`) renvoie chacun vers la bonne page selon son rôle (`profiles.role`). **La vraie sécurité est dans la base** (RLS) : même en appelant l'API directement, un candidat ne peut rien faire d'admin.
 
 ---
 
-## Fonctionnement de la base (à connaître pour la soutenance)
+## Fonctionnement du backend (à connaître pour la soutenance)
+
+Notre backend, c'est **Supabase** : PostgreSQL pour les données, des **fonctions SQL** pour la logique et des **règles RLS** pour la sécurité. Les bonnes réponses ne quittent jamais le serveur.
 
 | US | Où c'est géré |
 |---|---|
-| US1 – compte unique Nom + Email | contrainte `unique (nom, email)` sur `profiles` ; le profil est créé par le trigger `handle_new_user` à partir des données envoyées dans `auth.signUp(data: {...})` |
-| US2 – un seul passage par test | contrainte `unique (candidat_id, discipline_id)` sur `tentatives` |
-| US2 – temps limite | le serveur enregistre l'heure d'affichage de chaque question ; une réponse arrivée trop tard est comptée fausse |
-| US2 – triche | les bonnes réponses ne sont jamais envoyées à l'appli ; la correction se fait dans la fonction `repondre` |
-| US3 – modifier adresse + motivation | droit `update` limité à ces 2 colonnes |
-| US4 – accès admin | colonne `role` + fonction `is_admin()` utilisée par toutes les règles de sécurité ; vérifiable avec `supabase/verif_securite_us4.sql` (toutes les lignes doivent afficher OK) |
-| US5 – import JSON | fonction `reinitialiser_discipline` (tout ou rien) |
-| US6 – filtre par année | colonne `annee_scolaire` (septembre à août) |
-| US7 – camemberts | fonction `stats_reussite(annee)` |
-
-### Appels depuis Flutter (exemples)
-
-```dart
-// US2 – démarrer un test
-final tentativeId = await supabase.rpc('commencer_test', params: {'p_discipline_id': disciplineId});
-
-// US2 – question suivante (null = test terminé)
-final question = await supabase.rpc('question_suivante', params: {'p_tentative_id': tentativeId});
-
-// US2 – envoyer la réponse
-await supabase.rpc('repondre', params: {
-  'p_tentative_id': tentativeId,
-  'p_question_id': question['id'],
-  'p_choix_ids': choixSelectionnes, // List<int>
-});
-
-// US5 – import JSON
-await supabase.rpc('reinitialiser_discipline', params: {
-  'p_discipline_id': disciplineId,
-  'p_questions': fichierJson['questions'],
-});
-
-// US7 – statistiques
-final stats = await supabase.rpc('stats_reussite', params: {'p_annee': '2026-2027'});
-```
+| US1 – champs obligatoires | validations du formulaire **et** contraintes `check` sur `profiles` |
+| US1 – compte unique Nom + Email | contrainte `unique (nom, email)` ; le profil est créé par le trigger `handle_new_user` à partir de `auth.signUp(data: {...})` |
+| US2 – un seul passage par test | contrainte `unique (candidat_id, discipline_id)` sur `tentatives` + fonction `commencer_test` |
+| US2 – temps limite | le serveur enregistre l'heure d'affichage de chaque question (`question_suivante`) ; une réponse arrivée trop tard est comptée fausse (`repondre`, 3 s de tolérance réseau) |
+| US2 – triche | les bonnes réponses ne sont jamais envoyées à l'appli ; la correction se fait dans `repondre` |
+| US2 – reprise | si la page est fermée, `question_suivante` renvoie la même question avec le temps **restant** (le chrono ne repart pas de zéro) |
+| US3 – modifier adresse + motivation | droit `update` limité à ces 2 colonnes ; RLS : chacun ne voit que son profil |
+| US4 – accès admin | colonne `role` + fonction `is_admin()` utilisée par toutes les règles de sécurité |
+| US5 – créer / modifier | fonction `enregistrer_question` (question + choix en une seule transaction, contrôles `verifier_question`) |
+| US5 – import JSON | fonction `reinitialiser_discipline` : tout est vérifié **avant** de supprimer quoi que ce soit (tout ou rien) |
+| US6 – filtre par année | colonne `annee_scolaire` (septembre à août), recherche `ilike` (sans tenir compte des majuscules) |
+| US7 – camemberts | fonction `stats_reussite(annee, seuil)` ; un test est réussi à partir de **50 %** (constante `seuilReussite`) |
 
 ### Format du fichier JSON d'import (US5)
 
-Voir `data/questions_java.json`. `type` vaut `radio` (une seule bonne réponse) ou `checkbox` (plusieurs) ; `temps_limite_sec` est en secondes.
+```json
+{
+  "questions": [
+    {
+      "enonce": "Quel mot-clé permet à une classe d'hériter d'une autre classe ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "extends", "correct": true },
+        { "texte": "implements", "correct": false }
+      ]
+    }
+  ]
+}
+```
+
+`type` vaut `radio` (exactement une bonne réponse) ou `checkbox` (une ou plusieurs) ; `temps_limite_sec` est en secondes ; au moins 2 choix. Exemples complets : `data/questions_java.json`, `data/questions_algorithmes.json`, `data/questions_html_css.json`.
+
+---
+
+## Qualité du code
+
+```bash
+flutter analyze   # 0 erreur, 0 avertissement (inclut la règle public_member_api_docs)
+flutter test      # tests automatiques : un fichier par US dans test/
+```
+
+- **Documentation** : chaque classe et fonction publique a un commentaire `///`. La règle `public_member_api_docs` (dans `analysis_options.yaml`) fait échouer `flutter analyze` s'il en manque un.
+- **Tests** : les écrans sont testés avec de faux serveurs (aucune connexion nécessaire) : validations, chronomètre qui envoie la réponse à 0, import JSON, recherche, filtres, calcul des taux…
+- `dart doc` (génération HTML) plante actuellement à cause d'un bug de l'outil `dartdoc` 9.0.6 fourni avec le SDK (`RangeError` dans `_stripDocImports`), indépendant de notre code. À relancer après une mise à jour de Flutter : `dart doc --output doc/api`.
 
 ---
 

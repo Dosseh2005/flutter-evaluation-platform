@@ -9,8 +9,10 @@ library;
 /// de la colonne `profiles.motivation`).
 const motivations = ["Poursuite d'études", 'Réorientation', 'Reconversion'];
 
-/// Âge minimum et maximum acceptés (identiques à la contrainte SQL).
+/// Âge minimum accepté (identique à la contrainte SQL).
 const ageMin = 15;
+
+/// Âge maximum accepté (identique à la contrainte SQL).
 const ageMax = 99;
 
 /// Longueur minimale du mot de passe.
