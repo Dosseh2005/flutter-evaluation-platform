@@ -22,7 +22,11 @@ class Discipline {
 class DisciplinesRepository {
   /// Renvoie toutes les disciplines, dans l'ordre de création.
   Future<List<Discipline>> lister() async {
-    final lignes = await supabase.from('disciplines').select().order('id');
+    // ascending: true obligatoire : par défaut, order() trie à l'envers.
+    final lignes = await supabase
+        .from('disciplines')
+        .select()
+        .order('id', ascending: true);
     return lignes.map(Discipline.fromJson).toList();
   }
 }

@@ -46,8 +46,29 @@ void main() {
           estConnecte: true,
           role: null,
         ),
-        Routes.chargement,
+        '/chargement?retour=%2Ftests',
       );
+    });
+
+    String? apresChargement(String? retour, Role role) => calculerRedirection(
+          chemin: Routes.chargement,
+          chargement: false,
+          estConnecte: true,
+          role: role,
+          retour: retour,
+        );
+
+    test('Page rechargée : on revient sur la page où on était', () {
+      expect(apresChargement('/profil', Role.candidat), '/profil');
+      expect(apresChargement('/admin/statistiques', Role.admin),
+          '/admin/statistiques');
+    });
+
+    test('Page rechargée : pas de retour vers une page interdite', () {
+      expect(apresChargement('/admin', Role.candidat), Routes.tests);
+      expect(apresChargement('/profil', Role.admin), Routes.admin);
+      expect(apresChargement(null, Role.candidat), Routes.tests);
+      expect(apresChargement('https://pirate.fr', Role.candidat), Routes.tests);
     });
   });
 }

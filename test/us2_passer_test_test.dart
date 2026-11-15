@@ -4,12 +4,16 @@ import 'package:evaluation_app/features/test/test_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 /// Faux serveur : 2 questions, enregistre les réponses reçues.
 class FauxTest implements TestRepository {
-  FauxTest({this.dejaTermine = false});
+  FauxTest({this.dejaTermine = false, this.commence = true});
 
   final bool dejaTermine;
+
+  /// Vrai si le candidat a déjà cliqué « Commencer » (tentative créée).
+  final bool commence;
   final reponses = <int, List<int>>{};
   int demarrages = 0;
 
@@ -40,7 +44,7 @@ class FauxTest implements TestRepository {
           disciplineId: 1,
           discipline: 'Java',
           nbQuestions: 2,
-          tentativeId: dejaTermine ? 99 : null,
+          tentativeId: dejaTermine || commence ? 99 : null,
           score: dejaTermine ? 1 : null,
           total: dejaTermine ? 2 : null,
           termine: dejaTermine,
@@ -143,7 +147,8 @@ void main() {
     await tester.tap(find.text('Valider'));
     await tester.pumpAndSettle();
     expect(repo.reponses[10], [1]);
-    expect(repo.demarrages, 1);
+    // L'écran du test ne démarre jamais lui-même un test
+    expect(repo.demarrages, 0);
 
     // Question 2 (checkbox, 5 s) : on ne répond pas, le chrono envoie seul
     expect(find.text('Question 2/2'), findsOneWidget);
@@ -165,5 +170,51 @@ void main() {
     await ouvrir(tester, repo, const TestPage(disciplineId: 1));
     expect(repo.demarrages, 0);
     expect(find.textContaining('Votre score'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Arriver sur la page d\'un test non commencé ne le démarre PAS '
+      '(retour arrière, adresse tapée…)', (tester) async {
+    final repo = FauxTest(commence: false);
+    await ouvrir(tester, repo, const TestPage(disciplineId: 1));
+    expect(repo.demarrages, 0);
+    expect(find.textContaining("pas encore été commencé"), findsOneWidget);
+  });
+
+  testWidgets('« Commencer » + confirmation démarre le test puis l\'ouvre',
+      (tester) async {
+    final repo = FauxTest(commence: false);
+    final router = GoRouter(
+      initialLocation: '/tests',
+      routes: [
+        GoRoute(path: '/tests', builder: (_, _) => const TestsPage()),
+        GoRoute(
+          path: '/test/:id',
+          builder: (_, s) =>
+              TestPage(disciplineId: int.parse(s.pathParameters['id']!)),
+        ),
+      ],
+    );
+    tester.view.physicalSize = const Size(900, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(ProviderScope(
+      overrides: [testRepositoryProvider.overrideWithValue(repo)],
+      child: MaterialApp.router(routerConfig: router),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Commencer'));
+    await tester.pumpAndSettle();
+    // Annuler : rien n'est démarré
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+    expect(repo.demarrages, 0);
+
+    await tester.tap(find.text('Commencer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Commencer').last);
+    await tester.pump();
+    expect(repo.demarrages, 1);
   });
 }

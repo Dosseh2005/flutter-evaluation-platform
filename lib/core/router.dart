@@ -61,6 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       chargement: session.chargement,
       estConnecte: session.estConnecte,
       role: session.role,
+      retour: state.uri.queryParameters['retour'],
     ),
     routes: [
       GoRoute(
@@ -108,26 +109,51 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// - connecté → jamais sur /login ou /register ;
 /// - candidat → jamais sur /admin (US4) ; admin → toujours sous /admin.
 ///
+/// Pendant la lecture du rôle (ex : page rechargée), l'utilisateur attend
+/// sur /chargement et la page demandée est gardée dans [retour] : il y
+/// revient ensuite au lieu de repartir de l'accueil.
+///
 /// Fonction séparée (sans Supabase) pour pouvoir la tester facilement.
 String? calculerRedirection({
   required String chemin,
   required bool chargement,
   required bool estConnecte,
   required Role? role,
+  String? retour,
 }) {
   final estPublique = _routesPubliques.contains(chemin);
 
   if (!estConnecte) return estPublique ? null : Routes.login;
 
-  // Connecté mais rôle pas encore lu : on attend sur l'écran de chargement.
+  // Connecté mais rôle pas encore lu : on attend sur l'écran de chargement,
+  // en retenant la page demandée.
   if (chargement || role == null) {
-    return chemin == Routes.chargement ? null : Routes.chargement;
+    if (chemin == Routes.chargement) return null;
+    if (estPublique) return Routes.chargement;
+    return '${Routes.chargement}?retour=${Uri.encodeComponent(chemin)}';
   }
 
   final accueil = role == Role.admin ? Routes.admin : Routes.tests;
   final estAdminRoute = chemin.startsWith(Routes.admin);
 
-  if (estPublique || chemin == Routes.chargement) return accueil;
+  if (chemin == Routes.chargement) {
+    // Retour à la page demandée avant le chargement, si elle est autorisée.
+    final cible = retour;
+    if (cible == null ||
+        !cible.startsWith('/') ||
+        cible == Routes.chargement ||
+        _routesPubliques.contains(cible)) {
+      return accueil;
+    }
+    return calculerRedirection(
+          chemin: cible,
+          chargement: false,
+          estConnecte: true,
+          role: role,
+        ) ??
+        cible;
+  }
+  if (estPublique) return accueil;
   if (role == Role.candidat && estAdminRoute) return Routes.tests;
   if (role == Role.admin && !estAdminRoute) return Routes.admin;
   return null;

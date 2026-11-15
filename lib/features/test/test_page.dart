@@ -12,7 +12,8 @@ import 'test_repository.dart';
 /// Passage du test d'une discipline (US2).
 ///
 /// Déroulement :
-/// 1. on retrouve la tentative du candidat ou on en démarre une ;
+/// 1. on retrouve la tentative du candidat (démarrée par « Commencer »
+///    dans « Mes tests ») ;
 /// 2. on affiche une question à la fois avec son compte à rebours ;
 /// 3. au clic sur « Valider » ou quand le temps est écoulé, la réponse
 ///    est envoyée au serveur, qui la corrige ;
@@ -64,7 +65,17 @@ class _TestPageState extends ConsumerState<TestPage> {
         _afficherResultat(test.tentativeId!);
         return;
       }
-      _tentativeId = test.tentativeId ?? await _repo.commencer(test.disciplineId);
+      // Cette page ne démarre JAMAIS un test : seul le bouton « Commencer »
+      // de « Mes tests » le fait, après confirmation. Arriver ici par
+      // erreur (retour arrière, adresse tapée…) ne consomme donc pas le
+      // passage unique.
+      if (test.tentativeId == null) {
+        if (!mounted) return;
+        setState(() => _erreur = "Ce test n'a pas encore été commencé. "
+            'Utilisez le bouton « Commencer » depuis « Mes tests ».');
+        return;
+      }
+      _tentativeId = test.tentativeId;
       await _questionSuivante();
     } catch (e) {
       _afficherErreur(e);
@@ -232,14 +243,36 @@ class _EcranQuestion extends StatelessWidget {
                 child: Text('Question ${question.numero}/${question.total}',
                     style: theme.textTheme.titleMedium),
               ),
-              Chip(
-                avatar: Icon(Icons.timer_outlined,
-                    color: urgent ? theme.colorScheme.error : null),
-                label: Text(
-                  '$restant s',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: urgent ? theme.colorScheme.error : null,
+              // Simple affichage (pas un Chip : un Chip est annoncé comme
+              // une case à cocher par les lecteurs d'écran).
+              Semantics(
+                label: 'Temps restant : $restant secondes',
+                excludeSemantics: true,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: urgent
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.outline),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.timer_outlined,
+                          size: 18,
+                          color: urgent ? theme.colorScheme.error : null),
+                      const SizedBox(width: 6),
+                      Text(
+                        '$restant s',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: urgent ? theme.colorScheme.error : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -15,8 +15,9 @@ class QuestionsRepository {
         .select('id, enonce, type, temps_limite_sec, ordre, '
             'choix(id, texte, est_correct)')
         .eq('discipline_id', disciplineId)
-        .order('ordre')
-        .order('id');
+        // ascending: true obligatoire : par défaut, order() trie à l'envers.
+        .order('ordre', ascending: true)
+        .order('id', ascending: true);
     return lignes.map(Question.depuisBase).toList();
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/erreurs.dart';
 import '../../core/router.dart';
 import '../../core/widgets.dart';
 import '../test/test_repository.dart';
@@ -50,7 +51,18 @@ class _TestsPageState extends ConsumerState<TestsPage> {
         ],
       ),
     );
-    if (ok == true && mounted) context.go(Routes.test(test.disciplineId));
+    if (ok != true || !mounted) return;
+
+    // Le test est démarré ICI, seulement après la confirmation.
+    final messenger = ScaffoldMessenger.of(context);
+    final routeur = GoRouter.of(context);
+    try {
+      await ref.read(testRepositoryProvider).commencer(test.disciplineId);
+      routeur.go(Routes.test(test.disciplineId));
+    } catch (e) {
+      afficherMessage(messenger, messageErreur(e), erreur: true);
+      if (mounted) setState(_charger);
+    }
   }
 
   @override
