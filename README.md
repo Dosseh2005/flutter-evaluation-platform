@@ -3,7 +3,7 @@
 Plateforme d'évaluation en ligne : les candidats créent un compte, passent un test unique et chronométré par discipline (Java, Algorithmes, HTML/CSS) et suivent leurs scores sur leur profil. L'administrateur gère les questions (formulaire ou import JSON), consulte les résultats et les taux de réussite en camemberts.
 
 Projet réalisé en groupe de 4 en EduScrum (Daily, DoD, DoF, Rétrospective).
-Suivi des tâches : *(coller ici le lien du tableau Trello)*
+Suivi des tâches : [Tableau Trello – Plateforme d'évaluation EduScrum](https://trello.com/b/E4wkDNXr/the-flutter-project-plateforme-d%C3%A9valuation-eduscrum)
 
 ## Équipe
 
@@ -97,25 +97,17 @@ select id, 'Admin', 'Plateforme', email, 'admin'
 flutter run -d chrome --dart-define-from-file=env.json
 ```
 
-Initialisation dans `main.dart` :
+La connexion à Supabase est faite dans `lib/core/supabase_client.dart` (appelée par `main.dart`). Partout dans l'appli, utiliser le raccourci `supabase` (ex : `supabase.from('profiles')`). Sans `env.json`, l'appli affiche un écran qui explique quoi faire au lieu de planter.
 
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+### Navigation (`lib/core/router.dart`)
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: const String.fromEnvironment('SUPABASE_URL'),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
-  );
-  runApp(const ProviderScope(child: MyApp()));
-}
+| Route | Page | Accès |
+|---|---|---|
+| `/login`, `/register` | connexion, inscription | non connecté |
+| `/tests`, `/profil`, `/test/:id` | candidat | candidat connecté |
+| `/admin` | administration | admin uniquement |
 
-/// Raccourci vers le client Supabase, utilisable partout.
-final supabase = Supabase.instance.client;
-```
+La garde de route (`calculerRedirection`) renvoie automatiquement chacun vers la bonne page selon son rôle (`profiles.role`). Elle est testée dans `test/widget_test.dart`.
 
 ---
 

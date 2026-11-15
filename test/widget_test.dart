@@ -1,30 +1,53 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:evaluation_app/core/router.dart';
+import 'package:evaluation_app/core/session.dart';
+import 'package:evaluation_app/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:evaluation_app/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets("Sans env.json, l'appli explique comment la configurer",
+      (tester) async {
+    await tester.pumpWidget(const ConfigManquanteApp());
+    expect(find.textContaining('Configuration Supabase manquante'),
+        findsOneWidget);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  group('Garde de route (calculerRedirection)', () {
+    String? redir(String chemin, {bool connecte = true, Role? role}) =>
+        calculerRedirection(
+          chemin: chemin,
+          chargement: false,
+          estConnecte: connecte,
+          role: connecte ? role : null,
+        );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('Visiteur non connecté : renvoyé vers /login', () {
+      expect(redir('/tests', connecte: false), Routes.login);
+      expect(redir('/admin', connecte: false), Routes.login);
+      expect(redir('/register', connecte: false), isNull);
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('Candidat : ne peut pas ouvrir /admin (US4)', () {
+      expect(redir('/admin', role: Role.candidat), Routes.tests);
+      expect(redir('/login', role: Role.candidat), Routes.tests);
+      expect(redir('/profil', role: Role.candidat), isNull);
+    });
+
+    test('Admin : toujours dans /admin', () {
+      expect(redir('/tests', role: Role.admin), Routes.admin);
+      expect(redir('/login', role: Role.admin), Routes.admin);
+      expect(redir('/admin', role: Role.admin), isNull);
+    });
+
+    test('Rôle en cours de lecture : écran de chargement', () {
+      expect(
+        calculerRedirection(
+          chemin: '/tests',
+          chargement: true,
+          estConnecte: true,
+          role: null,
+        ),
+        Routes.chargement,
+      );
+    });
   });
 }
