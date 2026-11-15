@@ -104,6 +104,22 @@ flutter test      # doit afficher : All tests passed!
 
 ---
 
+## Publier la version en ligne (GitHub Pages)
+
+L'application est en ligne à l'adresse https://dosseh2005.github.io/flutter-evaluation-platform/ : c'est ce lien qu'on partage (WhatsApp, email…). Il fonctionne sur Android, iPhone et ordinateur, sans rien installer.
+
+Pour republier après une modification du code (dans **Git Bash**) :
+
+```bash
+MSYS_NO_PATHCONV=1 flutter build web --release --base-href /flutter-evaluation-platform/ --dart-define-from-file=env.json
+cd build/web
+touch .nojekyll
+git init -b gh-pages && git add -A && git commit -m "Publication"
+git push -f https://github.com/Dosseh2005/flutter-evaluation-platform.git gh-pages
+```
+
+La nouvelle version est en ligne une à deux minutes plus tard. `MSYS_NO_PATHCONV=1` empêche Git Bash de transformer `/flutter-evaluation-platform/` en chemin Windows.
+
 ## Problèmes fréquents
 
 | Ce que vous voyez | Cause | Solution |

@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Obligatoire en version finale : l'appli doit joindre Supabase -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="evaluation_app"
+        android:label="Plateforme d\'évaluation"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
