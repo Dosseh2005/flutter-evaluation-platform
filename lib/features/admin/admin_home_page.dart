@@ -1,18 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/page_a_venir.dart';
+import '../../core/router.dart';
+import '../../core/session.dart';
 
-/// Accueil de l'administrateur : menu Questions / Tableau de bord /
-/// Statistiques. Sera codé dans l'US4, puis US5, US6 et US7.
-class AdminHomePage extends StatelessWidget {
+/// Une entrée du menu administrateur.
+class _EntreeMenu {
+  const _EntreeMenu(this.titre, this.description, this.icone, this.route);
+
+  final String titre;
+  final String description;
+  final IconData icone;
+  final String route;
+}
+
+const _menu = [
+  _EntreeMenu(
+    'Questions',
+    'Ajouter, modifier, supprimer ou importer (JSON) les questions de chaque discipline',
+    Icons.quiz_outlined,
+    Routes.adminQuestions,
+  ),
+  _EntreeMenu(
+    'Tableau de bord',
+    'Résultats récents des candidats, recherche et filtre par année scolaire',
+    Icons.table_chart_outlined,
+    Routes.adminTableauDeBord,
+  ),
+  _EntreeMenu(
+    'Statistiques',
+    'Taux de réussite par discipline et par année (camemberts)',
+    Icons.pie_chart_outline,
+    Routes.adminStatistiques,
+  ),
+];
+
+/// Accueil de l'administrateur (US4) : menu vers la gestion des questions
+/// (US5), le tableau de bord (US6) et les statistiques (US7), plus un
+/// bouton de déconnexion.
+///
+/// Seul un admin peut voir cette page : le router renvoie les candidats
+/// vers /tests, et la base (RLS) refuse de toute façon leurs actions admin.
+class AdminHomePage extends ConsumerWidget {
   /// Crée l'accueil administrateur.
   const AdminHomePage({super.key});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Administration'),
+        actions: [
+          IconButton(
+            tooltip: 'Se déconnecter',
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(sessionProvider).deconnecter(),
+          ),
+        ],
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Que voulez-vous faire ?',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 16),
+                for (final entree in _menu)
+                  Card(
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: Icon(entree.icone, size: 32),
+                      title: Text(entree.titre),
+                      subtitle: Text(entree.description),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.go(entree.route),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Page admin provisoire avec un bouton de retour au menu, en attendant
+/// que l'US correspondante soit codée.
+class AdminPageAVenir extends StatelessWidget {
+  /// Crée une page admin provisoire.
+  const AdminPageAVenir({super.key, required this.titre, required this.us});
+
+  /// Titre de la page.
+  final String titre;
+
+  /// US qui remplacera cette page.
+  final String us;
+
+  @override
   Widget build(BuildContext context) {
-    return const PageAVenir(
-      titre: 'Administration',
-      us: 'US4 – Accueil admin (puis US5, US6, US7)',
+    return PageAVenir(
+      titre: titre,
+      us: us,
+      actions: [
+        OutlinedButton.icon(
+          onPressed: () => context.go(Routes.admin),
+          icon: const Icon(Icons.arrow_back),
+          label: const Text('Retour au menu'),
+        ),
+      ],
     );
   }
 }

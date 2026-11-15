@@ -120,7 +120,7 @@ La garde de route (`calculerRedirection`) renvoie automatiquement chacun vers la
 | US2 – temps limite | le serveur enregistre l'heure d'affichage de chaque question ; une réponse arrivée trop tard est comptée fausse |
 | US2 – triche | les bonnes réponses ne sont jamais envoyées à l'appli ; la correction se fait dans la fonction `repondre` |
 | US3 – modifier adresse + motivation | droit `update` limité à ces 2 colonnes |
-| US4 – accès admin | colonne `role` + fonction `is_admin()` utilisée par toutes les règles de sécurité |
+| US4 – accès admin | colonne `role` + fonction `is_admin()` utilisée par toutes les règles de sécurité ; vérifiable avec `supabase/verif_securite_us4.sql` (toutes les lignes doivent afficher OK) |
 | US5 – import JSON | fonction `reinitialiser_discipline` (tout ou rien) |
 | US6 – filtre par année | colonne `annee_scolaire` (septembre à août) |
 | US7 – camemberts | fonction `stats_reussite(annee)` |

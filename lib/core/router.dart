@@ -18,6 +18,9 @@ abstract final class Routes {
   static const tests = '/tests';
   static const profil = '/profil';
   static const admin = '/admin';
+  static const adminQuestions = '/admin/questions';
+  static const adminTableauDeBord = '/admin/tableau-de-bord';
+  static const adminStatistiques = '/admin/statistiques';
 
   /// Page de passage du test d'une discipline, ex : `/test/2`.
   static String test(int disciplineId) => '/test/$disciplineId';
@@ -61,6 +64,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.admin,
         builder: (context, state) => const AdminHomePage(),
+      ),
+      GoRoute(
+        path: Routes.adminQuestions,
+        builder: (context, state) => const AdminPageAVenir(
+          titre: 'Questions',
+          us: 'US5 – Ajouter, modifier et supprimer des questions',
+        ),
+      ),
+      GoRoute(
+        path: Routes.adminTableauDeBord,
+        builder: (context, state) => const AdminPageAVenir(
+          titre: 'Tableau de bord',
+          us: 'US6 – Tableau de bord des résultats',
+        ),
+      ),
+      GoRoute(
+        path: Routes.adminStatistiques,
+        builder: (context, state) => const AdminPageAVenir(
+          titre: 'Statistiques',
+          us: 'US7 – Graphiques de réussite',
+        ),
       ),
     ],
   );
