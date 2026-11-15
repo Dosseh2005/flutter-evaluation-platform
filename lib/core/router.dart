@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/admin/admin_home_page.dart';
 import '../features/admin/questions/questions_page.dart';
+import '../features/admin/statistiques/statistiques_page.dart';
 import '../features/admin/tableau_de_bord/tableau_de_bord_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/auth/register_page.dart';
@@ -77,10 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.adminStatistiques,
-        builder: (context, state) => const AdminPageAVenir(
-          titre: 'Statistiques',
-          us: 'US7 – Graphiques de réussite',
-        ),
+        builder: (context, state) => const StatistiquesPage(),
       ),
     ],
   );

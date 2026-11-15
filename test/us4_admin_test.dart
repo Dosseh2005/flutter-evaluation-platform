@@ -1,5 +1,6 @@
 import 'package:evaluation_app/core/router.dart';
 import 'package:evaluation_app/core/session.dart';
+import 'package:evaluation_app/core/widgets.dart';
 import 'package:evaluation_app/features/admin/admin_home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,7 @@ void main() {
         ])
           GoRoute(
             path: r,
-            builder: (_, _) => AdminPageAVenir(titre: r, us: 'test'),
+            builder: (_, _) => AdminScaffold(titre: r, corps: const SizedBox()),
           ),
       ],
     );
@@ -37,7 +38,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(Routes.adminQuestions), findsOneWidget);
 
-    await tester.tap(find.text('Retour au menu'));
+    await tester.tap(find.byTooltip('Retour au menu'));
     await tester.pumpAndSettle();
     expect(find.text('Que voulez-vous faire ?'), findsOneWidget);
   });

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/page_a_venir.dart';
 import '../../core/router.dart';
 import '../../core/session.dart';
 
@@ -89,34 +88,6 @@ class AdminHomePage extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Page admin provisoire avec un bouton de retour au menu, en attendant
-/// que l'US correspondante soit codée.
-class AdminPageAVenir extends StatelessWidget {
-  /// Crée une page admin provisoire.
-  const AdminPageAVenir({super.key, required this.titre, required this.us});
-
-  /// Titre de la page.
-  final String titre;
-
-  /// US qui remplacera cette page.
-  final String us;
-
-  @override
-  Widget build(BuildContext context) {
-    return PageAVenir(
-      titre: titre,
-      us: us,
-      actions: [
-        OutlinedButton.icon(
-          onPressed: () => context.go(Routes.admin),
-          icon: const Icon(Icons.arrow_back),
-          label: const Text('Retour au menu'),
-        ),
-      ],
     );
   }
 }
