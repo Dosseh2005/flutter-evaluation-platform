@@ -108,13 +108,24 @@ String traduireErreurAuth(AuthException e) {
     case 'over_email_send_rate_limit':
       return 'Trop de tentatives, réessayez dans quelques minutes.';
   }
-  // Erreur levée par la base (trigger handle_new_user) : contrainte
-  // unique (nom, email) ou champ obligatoire manquant.
-  if (e.message.contains('Database error')) {
-    return 'Inscription refusée : un compte existe déjà avec ce nom et cet '
-        'email, ou une information est invalide.';
+  // Erreurs levées par la base (trigger handle_new_user). Supabase renvoie
+  // alors une erreur 500 dont le message contient le texte de PostgreSQL.
+  final message = e.message;
+  if (message.contains('duplicate key') || message.contains('23505')) {
+    return 'Un compte existe déjà avec ce nom et cet email.';
   }
-  return 'Erreur : ${e.message}';
+  if (message.contains('violates check constraint') ||
+      message.contains('23514') ||
+      message.contains('Database error')) {
+    return 'Inscription refusée : une information obligatoire est manquante '
+        'ou invalide.';
+  }
+  // Pas d'Internet ou serveur injoignable.
+  if (e is AuthRetryableFetchException) {
+    return 'Impossible de joindre le serveur. Vérifiez votre connexion '
+        'Internet puis réessayez.';
+  }
+  return 'Erreur : $message';
 }
 
 /// Fournit l'[AuthRepository] de l'application.

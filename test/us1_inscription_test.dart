@@ -118,11 +118,35 @@ void main() {
       );
     });
 
+    // Messages copiés des vraies réponses du serveur Supabase (erreur 500).
     test('Doublon Nom + Email refusé par la base', () {
       expect(
+        traduireErreurAuth(AuthRetryableFetchException(
+          message: '{"code":"23505","message":"duplicate key value violates '
+              'unique constraint \\"profiles_nom_email_key\\""}',
+          statusCode: '500',
+        )),
+        'Un compte existe déjà avec ce nom et cet email.',
+      );
+    });
+
+    test('Information invalide refusée par la base (âge, motivation…)', () {
+      expect(
+        traduireErreurAuth(AuthRetryableFetchException(
+          message: '{"code":"23514","message":"new row for relation '
+              '\\"profiles\\" violates check constraint '
+              '\\"profiles_age_check\\""}',
+          statusCode: '500',
+        )),
+        contains('manquante ou invalide'),
+      );
+    });
+
+    test('Serveur injoignable', () {
+      expect(
         traduireErreurAuth(
-            const AuthException('Database error saving new user')),
-        contains('nom et cet email'),
+            AuthRetryableFetchException(message: 'ClientException: Failed to fetch')),
+        contains('Impossible de joindre le serveur'),
       );
     });
 
