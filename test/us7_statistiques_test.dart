@@ -71,7 +71,7 @@ void main() {
     expect(find.text('Algorithmes'), findsOneWidget);
     expect(find.text('HTML/CSS'), findsOneWidget);
     expect(find.byType(PieChart), findsNWidgets(4));
-    expect(find.text('4 réussi(s) · 6 échoué(s)'), findsOneWidget);
+    expect(find.text('4 réussi(s), 6 échoué(s)'), findsOneWidget);
 
     // Changer d'année : plus aucun test → pas de camembert
     await tester.tap(find.byType(DropdownButtonFormField<String>));

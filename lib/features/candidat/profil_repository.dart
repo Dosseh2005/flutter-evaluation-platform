@@ -16,13 +16,13 @@ class Profil {
 
   /// Lit une ligne de la table `profiles`.
   factory Profil.fromJson(Map<String, dynamic> json) => Profil(
-        nom: json['nom'] as String,
-        prenom: json['prenom'] as String,
-        email: json['email'] as String,
-        age: json['age'] as int?,
-        adresse: json['adresse'] as String?,
-        motivation: json['motivation'] as String?,
-      );
+    nom: json['nom'] as String,
+    prenom: json['prenom'] as String,
+    email: json['email'] as String,
+    age: json['age'] as int?,
+    adresse: json['adresse'] as String?,
+    motivation: json['motivation'] as String?,
+  );
 
   /// Nom (lecture seule).
   final String nom;
@@ -55,11 +55,11 @@ class ScoreTest {
 
   /// Lit une ligne de `tentatives` avec sa discipline.
   factory ScoreTest.fromJson(Map<String, dynamic> json) => ScoreTest(
-        discipline: (json['disciplines'] as Map)['nom'] as String,
-        score: json['score'] as int,
-        total: json['total'] as int,
-        date: DateTime.parse(json['fin'] as String).toLocal(),
-      );
+    discipline: (json['disciplines'] as Map)['nom'] as String,
+    score: json['score'] as int,
+    total: json['total'] as int,
+    date: DateTime.parse(json['fin'] as String).toLocal(),
+  );
 
   /// Nom de la discipline.
   final String discipline;
@@ -83,8 +83,11 @@ class ProfilRepository {
 
   /// Profil du candidat connecté.
   Future<Profil> monProfil() async {
-    final ligne =
-        await supabase.from('profiles').select().eq('id', _uid).single();
+    final ligne = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', _uid)
+        .single();
     return Profil.fromJson(ligne);
   }
 
@@ -112,5 +115,6 @@ class ProfilRepository {
 }
 
 /// Fournit le [ProfilRepository].
-final profilRepositoryProvider =
-    Provider<ProfilRepository>((ref) => ProfilRepository());
+final profilRepositoryProvider = Provider<ProfilRepository>(
+  (ref) => ProfilRepository(),
+);

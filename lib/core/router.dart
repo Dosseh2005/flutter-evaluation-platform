@@ -69,13 +69,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
-      GoRoute(path: Routes.login, builder: (context, state) => const LoginPage()),
+      GoRoute(
+        path: Routes.login,
+        builder: (context, state) => const LoginPage(),
+      ),
       GoRoute(
         path: Routes.register,
         builder: (context, state) => const RegisterPage(),
       ),
-      GoRoute(path: Routes.tests, builder: (context, state) => const TestsPage()),
-      GoRoute(path: Routes.profil, builder: (context, state) => const ProfilPage()),
+      GoRoute(
+        path: Routes.tests,
+        builder: (context, state) => const TestsPage(),
+      ),
+      GoRoute(
+        path: Routes.profil,
+        builder: (context, state) => const ProfilPage(),
+      ),
       GoRoute(
         path: '/test/:disciplineId',
         builder: (context, state) => TestPage(

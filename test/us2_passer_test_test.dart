@@ -136,7 +136,7 @@ void main() {
 
     // Question 1 (radio) : Valider désactivé tant que rien n'est coché
     expect(find.text('Question 1/2'), findsOneWidget);
-    expect(find.text('30 s'), findsOneWidget);
+    expect(find.text('0:30'), findsOneWidget);
     expect(
       tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Valider')).onPressed,
       isNull,
@@ -154,14 +154,15 @@ void main() {
     expect(find.text('Question 2/2'), findsOneWidget);
     await tester.tap(find.text('int'));
     await tester.pump(const Duration(seconds: 3));
-    expect(find.text('2 s'), findsOneWidget);
+    expect(find.text('0:02'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
     expect(repo.reponses[11], [3]);
 
     // Résultat
-    expect(find.textContaining('Votre score : 1 / 2 (50 %)'), findsOneWidget);
-    expect(find.textContaining('Test réussi'), findsOneWidget);
+    expect(find.text('1 / 2'), findsOneWidget);
+    expect(find.text('50 %'), findsOneWidget);
+    expect(find.text('Réussi'), findsOneWidget);
   });
 
   testWidgets('Test déjà passé : score affiché, pas de nouveau départ',
@@ -169,7 +170,7 @@ void main() {
     final repo = FauxTest(dejaTermine: true);
     await ouvrir(tester, repo, const TestPage(disciplineId: 1));
     expect(repo.demarrages, 0);
-    expect(find.textContaining('Votre score'), findsOneWidget);
+    expect(find.text('Votre score'), findsOneWidget);
   });
 
   testWidgets(

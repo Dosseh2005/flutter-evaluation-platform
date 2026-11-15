@@ -1,91 +1,104 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/router.dart';
-import '../../core/session.dart';
+import '../../core/theme.dart';
+import '../../core/widgets.dart';
 
-/// Une entrée du menu administrateur.
-class _EntreeMenu {
-  const _EntreeMenu(this.titre, this.description, this.icone, this.route);
+/// Description de chaque section, affichée sur l'accueil.
+const _descriptions = {
+  SectionAdmin.questions:
+      'Ajouter, modifier ou supprimer les questions de chaque discipline, '
+      'ou remplacer une discipline entière par un fichier JSON.',
+  SectionAdmin.tableauDeBord:
+      'Consulter les derniers résultats, rechercher un candidat et filtrer '
+      'par année scolaire.',
+  SectionAdmin.statistiques:
+      'Voir les taux de réussite par discipline et pour tous les étudiants, '
+      'année par année.',
+};
 
-  final String titre;
-  final String description;
-  final IconData icone;
-  final String route;
-}
-
-const _menu = [
-  _EntreeMenu(
-    'Questions',
-    'Ajouter, modifier, supprimer ou importer (JSON) les questions de chaque discipline',
-    Icons.quiz_outlined,
-    Routes.adminQuestions,
-  ),
-  _EntreeMenu(
-    'Tableau de bord',
-    'Résultats récents des candidats, recherche et filtre par année scolaire',
-    Icons.table_chart_outlined,
-    Routes.adminTableauDeBord,
-  ),
-  _EntreeMenu(
-    'Statistiques',
-    'Taux de réussite par discipline et par année (camemberts)',
-    Icons.pie_chart_outline,
-    Routes.adminStatistiques,
-  ),
-];
-
-/// Accueil de l'administrateur (US4) : menu vers la gestion des questions
-/// (US5), le tableau de bord (US6) et les statistiques (US7), plus un
-/// bouton de déconnexion.
+/// Accueil de l'administrateur (US4) : accès à la gestion des questions
+/// (US5), au tableau de bord (US6) et aux statistiques (US7).
 ///
 /// Seul un admin peut voir cette page : le router renvoie les candidats
 /// vers /tests, et la base (RLS) refuse de toute façon leurs actions admin.
-class AdminHomePage extends ConsumerWidget {
+class AdminHomePage extends StatelessWidget {
   /// Crée l'accueil administrateur.
   const AdminHomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Administration'),
-        actions: [
-          IconButton(
-            tooltip: 'Se déconnecter',
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(sessionProvider).deconnecter(),
-          ),
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Que voulez-vous faire ?',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                for (final entree in _menu)
-                  Card(
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: Icon(entree.icone, size: 32),
-                      title: Text(entree.titre),
-                      subtitle: Text(entree.description),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () => context.go(entree.route),
-                    ),
-                  ),
-              ],
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AdminScaffold(
+      titre: 'Administration',
+      section: SectionAdmin.accueil,
+      corps: ContenuCentre(
+        child: ListView(
+          padding: margesPage(context),
+          children: [
+            const EnTete(
+              titre: 'Que voulez-vous faire ?',
+              description:
+                  'Gérez les évaluations et suivez les résultats '
+                  'des candidats.',
             ),
-          ),
+            Panneau(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (final s in _descriptions.keys) ...[
+                    if (s != _descriptions.keys.first) const Divider(),
+                    InkWell(
+                      onTap: () => context.go(s.route),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 22,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: Couleurs.selection,
+                                borderRadius: BorderRadius.circular(rayonPetit),
+                              ),
+                              child: Icon(s.icone, color: Couleurs.encre),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    s.libelle,
+                                    style: theme.textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _descriptions[s]!,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Couleurs.texteSecondaire,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: Couleurs.texteSecondaire,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

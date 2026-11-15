@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/erreurs.dart';
 import '../../core/router.dart';
+import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import 'test_repository.dart';
 
@@ -58,8 +59,9 @@ class _TestPageState extends ConsumerState<TestPage> {
   Future<void> _demarrer() async {
     try {
       final tests = await _repo.mesTests();
-      final test =
-          tests.firstWhere((t) => t.disciplineId == widget.disciplineId);
+      final test = tests.firstWhere(
+        (t) => t.disciplineId == widget.disciplineId,
+      );
       _discipline = test.discipline;
       if (test.termine) {
         _afficherResultat(test.tentativeId!);
@@ -71,8 +73,11 @@ class _TestPageState extends ConsumerState<TestPage> {
       // passage unique.
       if (test.tentativeId == null) {
         if (!mounted) return;
-        setState(() => _erreur = "Ce test n'a pas encore été commencé. "
-            'Utilisez le bouton « Commencer » depuis « Mes tests ».');
+        setState(
+          () => _erreur =
+              "Ce test n'a pas encore été commencé. "
+              'Utilisez le bouton « Commencer » depuis « Mes tests ».',
+        );
         return;
       }
       _tentativeId = test.tentativeId;
@@ -201,7 +206,15 @@ class _TestPageState extends ConsumerState<TestPage> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(_discipline.isEmpty ? 'Test' : 'Test $_discipline'),
+          toolbarHeight: 64,
+          titleSpacing: 20,
+          title: Row(
+            children: [
+              const Marque(compacte: true),
+              const SizedBox(width: 14),
+              Text(_discipline.isEmpty ? 'Test' : 'Test $_discipline'),
+            ],
+          ),
         ),
         body: corps,
       ),
@@ -209,6 +222,7 @@ class _TestPageState extends ConsumerState<TestPage> {
   }
 }
 
+/// Écran d'une question, présenté comme une feuille de réponses.
 class _EcranQuestion extends StatelessWidget {
   const _EcranQuestion({
     required this.question,
@@ -229,97 +243,66 @@ class _EcranQuestion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final urgent = restant <= 5;
     final derniere = question.numero >= question.total;
 
     return ContenuCentre(
-      largeurMax: 700,
+      largeurMax: 760,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: margesPage(context),
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: Text('Question ${question.numero}/${question.total}',
-                    style: theme.textTheme.titleMedium),
-              ),
-              // Simple affichage (pas un Chip : un Chip est annoncé comme
-              // une case à cocher par les lecteurs d'écran).
-              Semantics(
-                label: 'Temps restant : $restant secondes',
-                excludeSemantics: true,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: urgent
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.outline),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.timer_outlined,
-                          size: 18,
-                          color: urgent ? theme.colorScheme.error : null),
-                      const SizedBox(width: 6),
-                      Text(
-                        '$restant s',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: urgent ? theme.colorScheme.error : null,
-                        ),
-                      ),
-                    ],
+                child: Text(
+                  'Question ${question.numero}/${question.total}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Couleurs.texteSecondaire,
                   ),
                 ),
               ),
+              _Chrono(restant: restant),
             ],
           ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(value: question.numero / question.total),
-          const SizedBox(height: 24),
-          Text(question.enonce, style: theme.textTheme.titleLarge),
+          const SizedBox(height: 12),
+          _Progression(numero: question.numero, total: question.total),
+          const SizedBox(height: 36),
+          Text(question.enonce, style: theme.textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(
             question.plusieursReponses
-                ? 'Plusieurs réponses possibles'
-                : 'Une seule réponse',
-            style: theme.textTheme.bodySmall,
+                ? 'Plusieurs réponses possibles : cochez toutes les bonnes.'
+                : 'Une seule réponse.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Couleurs.texteSecondaire,
+            ),
           ),
-          const SizedBox(height: 16),
-          if (question.plusieursReponses)
-            for (final c in question.choix)
-              CheckboxListTile(
-                value: selection.contains(c.id),
-                title: Text(c.texte),
-                controlAffinity: ListTileControlAffinity.leading,
-                onChanged:
-                    envoiEnCours ? null : (v) => choisir(c.id, v ?? false),
-              )
-          else
-            RadioGroup<int>(
-              groupValue: selection.isEmpty ? null : selection.first,
-              onChanged: (v) {
-                if (!envoiEnCours && v != null) choisir(v, true);
-              },
-              child: Column(
-                children: [
-                  for (final c in question.choix)
-                    RadioListTile<int>(value: c.id, title: Text(c.texte)),
-                ],
+          const SizedBox(height: 24),
+          for (var i = 0; i < question.choix.length; i++)
+            _LigneReponse(
+              lettre: String.fromCharCode(65 + i),
+              texte: question.choix[i].texte,
+              cochee: selection.contains(question.choix[i].id),
+              plusieurs: question.plusieursReponses,
+              actif: !envoiEnCours,
+              onTap: () => choisir(
+                question.choix[i].id,
+                !selection.contains(question.choix[i].id),
               ),
             ),
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: envoiEnCours || selection.isEmpty ? null : valider,
-            child: Text(envoiEnCours
-                ? 'Envoi…'
-                : derniere
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton(
+              onPressed: envoiEnCours || selection.isEmpty ? null : valider,
+              child: Text(
+                envoiEnCours
+                    ? 'Envoi…'
+                    : derniere
                     ? 'Valider et terminer'
-                    : 'Valider'),
+                    : 'Valider',
+              ),
+            ),
           ),
         ],
       ),
@@ -327,6 +310,180 @@ class _EcranQuestion extends StatelessWidget {
   }
 }
 
+/// Compte à rebours en grands chiffres ; passe en rouge sous 6 secondes.
+class _Chrono extends StatelessWidget {
+  const _Chrono({required this.restant});
+
+  final int restant;
+
+  @override
+  Widget build(BuildContext context) {
+    final urgent = restant <= 5;
+    final couleur = urgent ? Couleurs.alerte : Couleurs.encre;
+    final minutes = restant ~/ 60;
+    final secondes = (restant % 60).toString().padLeft(2, '0');
+    return Semantics(
+      label: 'Temps restant : $restant secondes',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: urgent ? Couleurs.alerteFond : Couleurs.surface,
+          border: Border.all(color: urgent ? Couleurs.alerte : Couleurs.ligne),
+          borderRadius: BorderRadius.circular(rayonPetit),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.timer_outlined, size: 20, color: couleur),
+            const SizedBox(width: 8),
+            Text(
+              '$minutes:$secondes',
+              style: TextStyle(
+                fontFamily: policeApp,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: couleur,
+                fontFeatures: chiffresAlignes,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Barre de progression en segments : un segment par question.
+class _Progression extends StatelessWidget {
+  const _Progression({required this.numero, required this.total});
+
+  final int numero;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Question $numero sur $total',
+      excludeSemantics: true,
+      child: Row(
+        children: [
+          for (var i = 1; i <= total; i++) ...[
+            if (i > 1) const SizedBox(width: 6),
+            Expanded(
+              child: Container(
+                height: 6,
+                decoration: BoxDecoration(
+                  color: i < numero
+                      ? Couleurs.encre
+                      : i == numero
+                      ? Couleurs.encreClaire.withValues(alpha: 0.55)
+                      : Couleurs.ligne,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Une réponse proposée, avec sa lettre (A, B, C…) comme sur une feuille
+/// de réponses. Annoncée comme bouton radio ou case à cocher.
+class _LigneReponse extends StatelessWidget {
+  const _LigneReponse({
+    required this.lettre,
+    required this.texte,
+    required this.cochee,
+    required this.plusieurs,
+    required this.actif,
+    required this.onTap,
+  });
+
+  final String lettre;
+  final String texte;
+  final bool cochee;
+  final bool plusieurs;
+  final bool actif;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final forme = plusieurs
+        ? BorderRadius.circular(6)
+        : BorderRadius.circular(999);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Semantics(
+        checked: cochee,
+        inMutuallyExclusiveGroup: !plusieurs,
+        enabled: actif,
+        label: texte,
+        excludeSemantics: true,
+        onTap: actif ? onTap : null,
+        child: Material(
+          color: cochee ? Couleurs.selection : Couleurs.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(rayonPetit),
+            side: BorderSide(
+              color: cochee ? Couleurs.encre : Couleurs.ligne,
+              width: cochee ? 2 : 1,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(rayonPetit),
+            onTap: actif ? onTap : null,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: cochee ? 15 : 16,
+                vertical: cochee ? 13 : 14,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: cochee ? Couleurs.encre : Couleurs.surface,
+                      border: Border.all(
+                        color: cochee ? Couleurs.encre : Couleurs.ligne,
+                      ),
+                      borderRadius: forme,
+                    ),
+                    child: cochee && plusieurs
+                        ? const Icon(Icons.check, size: 18, color: Colors.white)
+                        : Text(
+                            lettre,
+                            style: TextStyle(
+                              fontFamily: policeApp,
+                              fontWeight: FontWeight.w600,
+                              color: cochee
+                                  ? Colors.white
+                                  : Couleurs.texteSecondaire,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      texte,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Écran de fin : score, verdict, et retour à la liste.
 class _EcranResultat extends StatelessWidget {
   const _EcranResultat({
     required this.discipline,
@@ -340,17 +497,75 @@ class _EcranResultat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final reussi = estReussi(score, total);
     final pourcentage = total == 0 ? 0 : (score * 100 / total).round();
-    return MessageCentre(
-      icone: reussi ? Icons.emoji_events_outlined : Icons.flag_outlined,
-      texte: 'Test $discipline terminé !\n\n'
-          'Votre score : $score / $total ($pourcentage %)\n'
-          '${reussi ? 'Test réussi, bravo !' : 'Test non réussi.'}\n\n'
-          'Ce résultat est enregistré dans votre profil.',
-      action: FilledButton(
-        onPressed: () => context.go(Routes.tests),
-        child: const Text('Retour à mes tests'),
+    return ContenuCentre(
+      largeurMax: 560,
+      child: ListView(
+        padding: margesPage(context),
+        children: [
+          Panneau(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(
+                    'Test $discipline terminé',
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'Votre score',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Couleurs.texteSecondaire,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    Text(
+                      '$score / $total',
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontFeatures: chiffresAlignes,
+                      ),
+                    ),
+                    Text(
+                      '$pourcentage %',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Couleurs.texteSecondaire,
+                      ),
+                    ),
+                    Pastille(
+                      reussi ? 'Réussi' : 'Non réussi',
+                      ton: reussi ? TonPastille.reussite : TonPastille.alerte,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Ce résultat est enregistré dans votre profil. Un test est '
+                  'réussi à partir de ${(seuilReussite * 100).round()} % de '
+                  'bonnes réponses.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Couleurs.texteSecondaire,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed: () => context.go(Routes.tests),
+                  child: const Text('Retour à mes tests'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

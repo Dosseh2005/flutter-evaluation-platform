@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/annee_scolaire.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets.dart';
 import '../../test/test_repository.dart';
 import 'resultats_repository.dart';
@@ -45,8 +46,10 @@ class _TableauDeBordPageState extends ConsumerState<TableauDeBordPage> {
   }
 
   void _charger() {
-    _resultats =
-        _repo.derniersResultats(recherche: _recherche.text, annee: _annee);
+    _resultats = _repo.derniersResultats(
+      recherche: _recherche.text,
+      annee: _annee,
+    );
   }
 
   /// Relance la recherche 400 ms après la dernière touche tapée (évite
@@ -60,62 +63,74 @@ class _TableauDeBordPageState extends ConsumerState<TableauDeBordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ordinateur = MediaQuery.sizeOf(context).width >= largeurOrdinateur;
     return AdminScaffold(
       titre: 'Tableau de bord',
       corps: ContenuCentre(
-        largeurMax: 1100,
-        child: Column(
+        largeurMax: 1180,
+        child: ListView(
+          padding: margesPage(context),
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: 320,
-                    child: TextField(
-                      controller: _recherche,
-                      decoration: const InputDecoration(
-                        labelText: 'Rechercher un candidat (nom ou prénom)',
-                        prefixIcon: Icon(Icons.search),
+            if (ordinateur)
+              const EnTete(
+                titre: 'Tableau de bord',
+                description:
+                    'Les derniers tests terminés, du plus récent au '
+                    'plus ancien.',
+              ),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: 340,
+                  child: TextField(
+                    controller: _recherche,
+                    decoration: const InputDecoration(
+                      labelText: 'Nom ou prénom du candidat',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: _rechercheModifiee,
+                  ),
+                ),
+                SizedBox(
+                  width: 240,
+                  child: DropdownButtonFormField<String?>(
+                    initialValue: _annee,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Année scolaire',
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Toutes les années'),
                       ),
-                      onChanged: _rechercheModifiee,
-                    ),
+                      for (final a in _annees)
+                        DropdownMenuItem(value: a, child: Text(a)),
+                    ],
+                    onChanged: (a) => setState(() {
+                      _annee = a;
+                      _charger();
+                    }),
                   ),
-                  SizedBox(
-                    width: 240,
-                    child: DropdownButtonFormField<String?>(
-                      initialValue: _annee,
-                      isExpanded: true,
-                      decoration:
-                          const InputDecoration(labelText: 'Année scolaire'),
-                      items: [
-                        const DropdownMenuItem(
-                            value: null, child: Text('Toutes les années')),
-                        for (final a in _annees)
-                          DropdownMenuItem(value: a, child: Text(a)),
-                      ],
-                      onChanged: (a) => setState(() {
-                        _annee = a;
-                        _charger();
-                      }),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Expanded(
-              child: ChargementFuture<List<Resultat>>(
-                future: _resultats,
-                reessayer: () => setState(_charger),
-                builder: (context, resultats) => resultats.isEmpty
-                    ? const MessageCentre(
+            const SizedBox(height: 20),
+            ChargementFuture<List<Resultat>>(
+              future: _resultats,
+              reessayer: () => setState(_charger),
+              builder: (context, resultats) => resultats.isEmpty
+                  ? const Panneau(
+                      child: MessageCentre(
                         icone: Icons.search_off,
-                        texte: 'Aucun résultat.',
-                      )
-                    : _TableauResultats(resultats: resultats),
-              ),
+                        texte:
+                            'Aucun résultat pour cette recherche. '
+                            "Essayez un autre nom ou une autre année.",
+                      ),
+                    )
+                  : _TableauResultats(resultats: resultats),
             ),
           ],
         ),
@@ -124,6 +139,8 @@ class _TableauDeBordPageState extends ConsumerState<TableauDeBordPage> {
   }
 }
 
+/// Tableau des résultats, dans un panneau qui défile horizontalement sur
+/// petit écran.
 class _TableauResultats extends StatelessWidget {
   const _TableauResultats({required this.resultats});
 
@@ -132,44 +149,101 @@ class _TableauResultats extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final format = DateFormat('dd/MM/yyyy HH:mm');
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${resultats.length} résultat(s)'
-          '${resultats.length == limiteResultats ? ' (les $limiteResultats plus récents)' : ''}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('Nom')),
-              DataColumn(label: Text('Prénom')),
-              DataColumn(label: Text('Discipline')),
-              DataColumn(label: Text('Score'), numeric: true),
-              DataColumn(label: Text('Résultat')),
-              DataColumn(label: Text('Date')),
-              DataColumn(label: Text('Année')),
-            ],
-            rows: [
-              for (final r in resultats)
-                DataRow(cells: [
-                  DataCell(Text(r.nom)),
-                  DataCell(Text(r.prenom)),
-                  DataCell(Text(r.discipline)),
-                  DataCell(Text('${r.score}/${r.total}')),
-                  DataCell(estReussi(r.score, r.total)
-                      ? const Text('Réussi',
-                          style: TextStyle(color: Colors.green))
-                      : const Text('Échoué')),
-                  DataCell(Text(format.format(r.date))),
-                  DataCell(Text(r.anneeScolaire)),
-                ]),
-            ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            '${resultats.length} résultat(s)'
+            '${resultats.length == limiteResultats ? ' (les $limiteResultats plus récents)' : ''}',
+            style: theme.textTheme.bodySmall,
           ),
         ),
-        const SizedBox(height: 16),
+        Panneau(
+          padding: EdgeInsets.zero,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(rayonPanneau),
+            child: LayoutBuilder(
+              builder: (context, contraintes) => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: contraintes.maxWidth),
+                  child: DataTable(
+                    horizontalMargin: 24,
+                    columnSpacing: 28,
+                    headingRowHeight: 48,
+                    dataRowMinHeight: 56,
+                    dataRowMaxHeight: 56,
+                    columns: const [
+                      DataColumn(label: Text('Nom')),
+                      DataColumn(label: Text('Prénom')),
+                      DataColumn(label: Text('Discipline')),
+                      DataColumn(label: Text('Score'), numeric: true),
+                      DataColumn(label: Text('Résultat')),
+                      DataColumn(label: Text('Date')),
+                      DataColumn(label: Text('Année')),
+                    ],
+                    rows: [
+                      for (final r in resultats)
+                        DataRow(
+                          cells: [
+                            DataCell(
+                              Text(
+                                r.nom,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            DataCell(Text(r.prenom)),
+                            DataCell(Text(r.discipline)),
+                            DataCell(
+                              Text(
+                                '${r.score}/${r.total}',
+                                style: const TextStyle(
+                                  fontFeatures: chiffresAlignes,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              estReussi(r.score, r.total)
+                                  ? const Pastille(
+                                      'Réussi',
+                                      ton: TonPastille.reussite,
+                                    )
+                                  : const Pastille(
+                                      'Échoué',
+                                      ton: TonPastille.alerte,
+                                    ),
+                            ),
+                            DataCell(
+                              Text(
+                                format.format(r.date),
+                                style: const TextStyle(
+                                  color: Couleurs.texteSecondaire,
+                                  fontFeatures: chiffresAlignes,
+                                ),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                r.anneeScolaire,
+                                style: const TextStyle(
+                                  color: Couleurs.texteSecondaire,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

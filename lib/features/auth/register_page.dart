@@ -59,7 +59,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final messenger = ScaffoldMessenger.of(context);
     final couleurErreur = Theme.of(context).colorScheme.error;
     try {
-      final resultat = await ref.read(authRepositoryProvider).inscrire(
+      final resultat = await ref
+          .read(authRepositoryProvider)
+          .inscrire(
             nom: _nom.text,
             prenom: _prenom.text,
             email: _email.text,
@@ -69,19 +71,20 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             motivation: _motivation!,
           );
       if (resultat == ResultatInscription.confirmationEmail && mounted) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text(
-            'Compte créé ! Confirmez votre email puis connectez-vous.',
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Compte créé ! Confirmez votre email puis connectez-vous.',
+            ),
           ),
-        ));
+        );
         context.go(Routes.login);
       }
       // Si le candidat est connecté, le router l'envoie seul vers /tests.
     } on ErreurAuth catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(e.message),
-        backgroundColor: couleurErreur,
-      ));
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: couleurErreur),
+      );
     } finally {
       if (mounted) setState(() => _envoiEnCours = false);
     }
@@ -94,11 +97,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       autovalidateMode: AutovalidateMode.onUserInteraction,
       child: FormulaireCentre(
         titre: 'Inscription',
+        description:
+            'Créez votre compte pour accéder aux évaluations. '
+            'Tous les champs sont obligatoires.',
         enfants: [
-          Text(
-            'Créez votre compte pour accéder aux évaluations.',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
           TextFormField(
             controller: _nom,
             decoration: const InputDecoration(labelText: 'Nom *'),
@@ -153,8 +155,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
           TextFormField(
             controller: _confirmation,
-            decoration:
-                const InputDecoration(labelText: 'Confirmer le mot de passe *'),
+            decoration: const InputDecoration(
+              labelText: 'Confirmer le mot de passe *',
+            ),
             obscureText: true,
             validator: (v) => validerConfirmation(v, _motDePasse.text),
             onFieldSubmitted: (_) => _inscrire(),

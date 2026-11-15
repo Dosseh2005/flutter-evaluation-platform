@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/disciplines.dart';
 import '../../../core/erreurs.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets.dart';
 import 'question.dart';
 import 'question_form_page.dart';
@@ -61,7 +62,8 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
             titre: 'Questions',
             corps: MessageCentre(
               icone: Icons.info_outline,
-              texte: 'Aucune discipline en base : exécutez supabase/schema.sql.',
+              texte:
+                  'Aucune discipline en base : exécutez supabase/schema.sql.',
             ),
           );
         }
@@ -71,9 +73,35 @@ class _QuestionsPageState extends ConsumerState<QuestionsPage> {
             titre: 'Questions',
             corps: Column(
               children: [
-                TabBar(
-                  isScrollable: true,
-                  tabs: [for (final d in disciplines) Tab(text: d.nom)],
+                Container(
+                  color: Couleurs.surface,
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(
+                    margesPage(context).left,
+                    0,
+                    margesPage(context).right,
+                    0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (MediaQuery.sizeOf(context).width >= largeurOrdinateur)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32),
+                          child: const EnTete(
+                            titre: 'Questions',
+                            description:
+                                'Les questions sont posées aux '
+                                'candidats dans l\'ordre de cette liste.',
+                          ),
+                        ),
+                      TabBar(
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        tabs: [for (final d in disciplines) Tab(text: d.nom)],
+                      ),
+                    ],
+                  ),
                 ),
                 Expanded(
                   child: TabBarView(
@@ -114,8 +142,9 @@ class _ListeQuestionsState extends ConsumerState<ListeQuestions> {
   }
 
   void _charger() {
-    _questions =
-        ref.read(questionsRepositoryProvider).lister(widget.discipline.id);
+    _questions = ref
+        .read(questionsRepositoryProvider)
+        .lister(widget.discipline.id);
   }
 
   void _recharger() => setState(_charger);
@@ -196,8 +225,11 @@ class _ListeQuestionsState extends ConsumerState<ListeQuestions> {
       afficherMessage(messenger, '$n questions importées');
       _recharger();
     } on FormatException catch (e) {
-      afficherMessage(messenger, 'Fichier invalide : ${e.message}',
-          erreur: true);
+      afficherMessage(
+        messenger,
+        'Fichier invalide : ${e.message}',
+        erreur: true,
+      );
     } catch (e) {
       afficherMessage(messenger, messageErreur(e), erreur: true);
     }
@@ -209,41 +241,64 @@ class _ListeQuestionsState extends ConsumerState<ListeQuestions> {
       future: _questions,
       reessayer: _recharger,
       builder: (context, questions) => ContenuCentre(
+        largeurMax: 1080,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: margesPage(context),
           children: [
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 12,
               children: [
-                Text('${questions.length} question(s)',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(width: 16),
-                FilledButton.icon(
-                  onPressed: () => _ouvrirFormulaire(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Ajouter une question'),
+                Text(
+                  '${questions.length} question(s)',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                OutlinedButton.icon(
-                  onPressed: _importer,
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Réinitialiser via JSON'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _importer,
+                      icon: const Icon(Icons.upload_file, size: 20),
+                      label: const Text('Réinitialiser via JSON'),
+                    ),
+                    FilledButton.icon(
+                      onPressed: () => _ouvrirFormulaire(),
+                      icon: const Icon(Icons.add, size: 20),
+                      label: const Text('Ajouter une question'),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             if (questions.isEmpty)
-              const MessageCentre(
-                icone: Icons.quiz_outlined,
-                texte: 'Aucune question pour le moment.',
-              ),
-            for (var i = 0; i < questions.length; i++)
-              _CarteQuestion(
-                numero: i + 1,
-                question: questions[i],
-                modifier: () => _ouvrirFormulaire(questions[i]),
-                supprimer: () => _supprimer(questions[i]),
+              const Panneau(
+                child: MessageCentre(
+                  icone: Icons.quiz_outlined,
+                  texte:
+                      'Aucune question pour le moment. Ajoutez-en une ou '
+                      'importez un fichier JSON.',
+                ),
+              )
+            else
+              Panneau(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    for (var i = 0; i < questions.length; i++) ...[
+                      if (i > 0) const Divider(),
+                      _LigneQuestion(
+                        numero: i + 1,
+                        question: questions[i],
+                        modifier: () => _ouvrirFormulaire(questions[i]),
+                        supprimer: () => _supprimer(questions[i]),
+                      ),
+                    ],
+                  ],
+                ),
               ),
           ],
         ),
@@ -252,8 +307,10 @@ class _ListeQuestionsState extends ConsumerState<ListeQuestions> {
   }
 }
 
-class _CarteQuestion extends StatelessWidget {
-  const _CarteQuestion({
+/// Une question de la liste : énoncé, type, temps, choix (bonnes réponses
+/// marquées) et actions.
+class _LigneQuestion extends StatelessWidget {
+  const _LigneQuestion({
     required this.numero,
     required this.question,
     required this.modifier,
@@ -267,11 +324,16 @@ class _CarteQuestion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type =
-        question.type == TypeQuestion.radio ? 'Une réponse' : 'Plusieurs réponses';
-    return Card(
+    final theme = Theme.of(context);
+    final type = question.type == TypeQuestion.radio
+        ? 'Une seule réponse'
+        : 'Plusieurs réponses';
+    // container: true → la question forme un bloc annoncé en entier par
+    // les lecteurs d'écran (énoncé, type, temps, choix).
+    return Semantics(
+      container: true,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+        padding: const EdgeInsets.fromLTRB(24, 18, 12, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -279,8 +341,13 @@ class _CarteQuestion extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text('$numero. ${question.enonce}',
-                      style: Theme.of(context).textTheme.titleSmall),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      '$numero. ${question.enonce}',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
                 ),
                 IconButton(
                   tooltip: 'Modifier',
@@ -290,24 +357,74 @@ class _CarteQuestion extends StatelessWidget {
                 IconButton(
                   tooltip: 'Supprimer',
                   icon: const Icon(Icons.delete_outline),
+                  color: Couleurs.alerte,
                   onPressed: supprimer,
                 ),
               ],
             ),
-            Text('$type · ${question.tempsLimiteSec} s',
-                style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 4),
-            for (final c in question.choix)
-              Row(
-                children: [
-                  Icon(
-                    c.correct ? Icons.check_circle : Icons.circle_outlined,
-                    size: 18,
-                    color: c.correct ? Colors.green : null,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(c.texte)),
-                ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Pastille(type),
+                Pastille('${question.tempsLimiteSec} secondes'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (var i = 0; i < question.choix.length; i++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 26,
+                      child: Text(
+                        String.fromCharCode(65 + i),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Couleurs.texteSecondaire,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        question.choix[i].texte,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: question.choix[i].correct
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: question.choix[i].correct
+                              ? Couleurs.reussite
+                              : Couleurs.encre,
+                        ),
+                      ),
+                    ),
+                    if (question.choix[i].correct)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Couleurs.reussite,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Bonne réponse',
+                              style: TextStyle(
+                                fontFamily: policeApp,
+                                fontSize: 13,
+                                color: Couleurs.reussite,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
               ),
           ],
         ),

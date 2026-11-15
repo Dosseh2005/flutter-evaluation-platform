@@ -40,16 +40,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final messenger = ScaffoldMessenger.of(context);
     final couleurErreur = Theme.of(context).colorScheme.error;
     try {
-      await ref.read(authRepositoryProvider).connecter(
-            email: _email.text,
-            motDePasse: _motDePasse.text,
-          );
+      await ref
+          .read(authRepositoryProvider)
+          .connecter(email: _email.text, motDePasse: _motDePasse.text);
       // Pas de context.go ici : le router redirige seul selon le rôle.
     } on ErreurAuth catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(e.message),
-        backgroundColor: couleurErreur,
-      ));
+      messenger.showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: couleurErreur),
+      );
     } finally {
       if (mounted) setState(() => _envoiEnCours = false);
     }
@@ -61,12 +59,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       key: _formKey,
       child: FormulaireCentre(
         titre: 'Connexion',
+        description: "Accédez à vos tests ou à l'espace d'administration.",
         enfants: [
-          Text(
-            "Plateforme d'évaluation",
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
           TextFormField(
             controller: _email,
             decoration: const InputDecoration(labelText: 'Email'),
@@ -79,8 +73,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             decoration: const InputDecoration(labelText: 'Mot de passe'),
             obscureText: true,
             autofillHints: const [AutofillHints.password],
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Le mot de passe est obligatoire' : null,
+            validator: (v) => (v == null || v.isEmpty)
+                ? 'Le mot de passe est obligatoire'
+                : null,
             onFieldSubmitted: (_) => _connecter(),
           ),
           FilledButton(

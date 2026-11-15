@@ -17,14 +17,14 @@ class Resultat {
 
   /// Lit une ligne de `tentatives` avec le profil et la discipline.
   factory Resultat.fromJson(Map<String, dynamic> json) => Resultat(
-        nom: (json['profiles'] as Map)['nom'] as String,
-        prenom: (json['profiles'] as Map)['prenom'] as String,
-        discipline: (json['disciplines'] as Map)['nom'] as String,
-        score: json['score'] as int,
-        total: json['total'] as int,
-        date: DateTime.parse(json['fin'] as String).toLocal(),
-        anneeScolaire: json['annee_scolaire'] as String,
-      );
+    nom: (json['profiles'] as Map)['nom'] as String,
+    prenom: (json['profiles'] as Map)['prenom'] as String,
+    discipline: (json['disciplines'] as Map)['nom'] as String,
+    score: json['score'] as int,
+    total: json['total'] as int,
+    date: DateTime.parse(json['fin'] as String).toLocal(),
+    anneeScolaire: json['annee_scolaire'] as String,
+  );
 
   /// Nom du candidat.
   final String nom;
@@ -69,16 +69,20 @@ class ResultatsRepository {
   }) async {
     var requete = supabase
         .from('tentatives')
-        .select('score, total, fin, annee_scolaire, '
-            'profiles!inner(nom, prenom), disciplines(nom)')
+        .select(
+          'score, total, fin, annee_scolaire, '
+          'profiles!inner(nom, prenom), disciplines(nom)',
+        )
         .not('fin', 'is', null);
 
     if (annee != null) requete = requete.eq('annee_scolaire', annee);
 
     final texte = nettoyerRecherche(recherche);
     if (texte.isNotEmpty) {
-      requete = requete.or('nom.ilike.*$texte*,prenom.ilike.*$texte*',
-          referencedTable: 'profiles');
+      requete = requete.or(
+        'nom.ilike.*$texte*,prenom.ilike.*$texte*',
+        referencedTable: 'profiles',
+      );
     }
 
     final lignes = await requete
@@ -95,5 +99,6 @@ class ResultatsRepository {
 }
 
 /// Fournit le [ResultatsRepository].
-final resultatsRepositoryProvider =
-    Provider<ResultatsRepository>((ref) => ResultatsRepository());
+final resultatsRepositoryProvider = Provider<ResultatsRepository>(
+  (ref) => ResultatsRepository(),
+);

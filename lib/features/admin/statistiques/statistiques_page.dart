@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/annee_scolaire.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets.dart';
 import '../../test/test_repository.dart';
 import 'stats_repository.dart';
 
 /// Couleur des tests réussis dans les camemberts.
-const couleurReussi = Color(0xFF2E7D32);
+const couleurReussi = Couleurs.reussite;
 
 /// Couleur des tests échoués dans les camemberts.
-const couleurEchoue = Color(0xFFC62828);
+const couleurEchoue = Couleurs.alerte;
 
 /// Statistiques de réussite (US7) : un camembert par discipline et un
 /// camembert général, pour l'année scolaire choisie.
@@ -43,15 +44,24 @@ class _StatistiquesPageState extends ConsumerState<StatistiquesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final ordinateur = MediaQuery.sizeOf(context).width >= largeurOrdinateur;
+    final seuil = (seuilReussite * 100).round();
     return AdminScaffold(
       titre: 'Statistiques',
       corps: ContenuCentre(
-        largeurMax: 1100,
+        largeurMax: 1180,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: margesPage(context),
           children: [
+            if (ordinateur)
+              EnTete(
+                titre: 'Statistiques',
+                description:
+                    'Taux de réussite par discipline. Un test est '
+                    'réussi à partir de $seuil % de bonnes réponses.',
+              ),
             Wrap(
-              spacing: 16,
+              spacing: 24,
               runSpacing: 12,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
@@ -60,8 +70,9 @@ class _StatistiquesPageState extends ConsumerState<StatistiquesPage> {
                   child: DropdownButtonFormField<String>(
                     initialValue: _annee,
                     isExpanded: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Année scolaire'),
+                    decoration: const InputDecoration(
+                      labelText: 'Année scolaire',
+                    ),
                     items: [
                       for (final a in _annees)
                         DropdownMenuItem(value: a, child: Text(a)),
@@ -72,27 +83,45 @@ class _StatistiquesPageState extends ConsumerState<StatistiquesPage> {
                     }),
                   ),
                 ),
-                Text(
-                  'Un test est réussi à partir de '
-                  '${(seuilReussite * 100).round()} % de bonnes réponses.',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                const _Legende(),
+                if (!ordinateur)
+                  Text(
+                    'Réussi à partir de $seuil % de bonnes réponses.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
               ],
             ),
-            const SizedBox(height: 8),
-            const _Legende(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
             ChargementFuture<List<StatDiscipline>>(
               future: _stats,
               reessayer: () => setState(_charger),
-              builder: (context, stats) => Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: [
-                  CarteCamembert(stat: statGenerale(stats), grand: true),
-                  for (final s in stats) CarteCamembert(stat: s),
-                ],
-              ),
+              builder: (context, stats) {
+                final general = CarteCamembert(
+                  stat: statGenerale(stats),
+                  grand: true,
+                );
+                final parDiscipline = Panneau(
+                  titre: 'Par discipline',
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < stats.length; i++) ...[
+                        if (i > 0) const Divider(height: 32),
+                        LigneDiscipline(stat: stats[i]),
+                      ],
+                    ],
+                  ),
+                );
+                return MediaQuery.sizeOf(context).width >= 900
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 5, child: general),
+                          const SizedBox(width: 24),
+                          Expanded(flex: 6, child: parDiscipline),
+                        ],
+                      )
+                    : Column(children: [general, parDiscipline]);
+              },
             ),
           ],
         ),
@@ -107,23 +136,99 @@ class _Legende extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget element(Color couleur, String texte) => Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(width: 14, height: 14, color: couleur),
-            const SizedBox(width: 6),
-            Text(texte),
-          ],
-        );
-    return Wrap(spacing: 16, children: [
-      element(couleurReussi, 'Réussi'),
-      element(couleurEchoue, 'Échoué'),
-    ]);
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: couleur,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(texte),
+      ],
+    );
+    return Wrap(
+      spacing: 20,
+      children: [
+        element(couleurReussi, 'Réussi'),
+        element(couleurEchoue, 'Échoué'),
+      ],
+    );
   }
 }
 
-/// Carte avec le camembert « réussi / échoué » d'une [stat].
+/// Camembert « réussi / échoué » d'une [stat].
+class Camembert extends StatelessWidget {
+  /// Crée le camembert de diamètre [taille].
+  const Camembert({super.key, required this.stat, required this.taille});
+
+  /// Données affichées.
+  final StatDiscipline stat;
+
+  /// Diamètre en pixels.
+  final double taille;
+
+  @override
+  Widget build(BuildContext context) {
+    if (stat.nbTests == 0) {
+      return SizedBox(
+        width: taille,
+        height: taille,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Couleurs.ligne, width: 2),
+          ),
+        ),
+      );
+    }
+    final avecTitres = taille >= 160;
+    final style = TextStyle(
+      fontFamily: policeApp,
+      color: Colors.white,
+      fontWeight: FontWeight.w600,
+      fontSize: taille >= 200 ? 16 : 13,
+    );
+    return SizedBox(
+      width: taille,
+      height: taille,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 0,
+          startDegreeOffset: -90,
+          sections: [
+            if (stat.nbReussis > 0)
+              PieChartSectionData(
+                value: stat.nbReussis.toDouble(),
+                color: couleurReussi,
+                radius: taille / 2,
+                title: avecTitres ? '${stat.tauxReussite.round()} %' : '',
+                titleStyle: style,
+              ),
+            if (stat.nbEchoues > 0)
+              PieChartSectionData(
+                value: stat.nbEchoues.toDouble(),
+                color: couleurEchoue,
+                radius: taille / 2,
+                title: avecTitres
+                    ? '${(100 - stat.tauxReussite).round()} %'
+                    : '',
+                titleStyle: style,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Panneau du camembert général (tous les étudiants).
 class CarteCamembert extends StatelessWidget {
-  /// Crée la carte ; [grand] pour le camembert général.
+  /// Crée le panneau ; [grand] pour le camembert général.
   const CarteCamembert({super.key, required this.stat, this.grand = false});
 
   /// Données affichées.
@@ -134,63 +239,84 @@ class CarteCamembert extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final taille = grand ? 220.0 : 160.0;
     final theme = Theme.of(context);
-    final style = TextStyle(
-      color: Colors.white,
-      fontWeight: FontWeight.bold,
-      fontSize: grand ? 16 : 13,
-    );
-
-    return SizedBox(
-      width: grand ? 340 : 250,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Text(stat.discipline, style: theme.textTheme.titleMedium),
-              Text('${stat.nbTests} test(s) passé(s)',
-                  style: theme.textTheme.bodySmall),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: taille,
-                width: taille,
-                child: stat.nbTests == 0
-                    ? const Center(child: Text('Aucun test cette année'))
-                    : PieChart(
-                        PieChartData(
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 0,
-                          sections: [
-                            if (stat.nbReussis > 0)
-                              PieChartSectionData(
-                                value: stat.nbReussis.toDouble(),
-                                color: couleurReussi,
-                                radius: taille / 2,
-                                title: '${stat.tauxReussite.round()} %',
-                                titleStyle: style,
-                              ),
-                            if (stat.nbEchoues > 0)
-                              PieChartSectionData(
-                                value: stat.nbEchoues.toDouble(),
-                                color: couleurEchoue,
-                                radius: taille / 2,
-                                title: '${(100 - stat.tauxReussite).round()} %',
-                                titleStyle: style,
-                              ),
-                          ],
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                '${stat.nbReussis} réussi(s) · ${stat.nbEchoues} échoué(s)',
-                style: theme.textTheme.bodyMedium,
-              ),
-            ],
+    return Panneau(
+      titre: stat.discipline,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${stat.nbTests} test(s) passé(s)',
+            style: theme.textTheme.bodySmall,
           ),
-        ),
+          const SizedBox(height: 20),
+          Center(
+            child: stat.nbTests == 0
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 60),
+                    child: Text('Aucun test cette année'),
+                  )
+                : Camembert(stat: stat, taille: grand ? 240 : 160),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            '${stat.nbReussis} réussi(s), ${stat.nbEchoues} échoué(s)',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Une discipline : petit camembert, nom, taux et nombres.
+class LigneDiscipline extends StatelessWidget {
+  /// Crée la ligne.
+  const LigneDiscipline({super.key, required this.stat});
+
+  /// Données affichées.
+  final StatDiscipline stat;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      container: true,
+      child: Row(
+        children: [
+          stat.nbTests == 0
+              ? const SizedBox(width: 96, height: 96)
+              : Camembert(stat: stat, taille: 96),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(stat.discipline, style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  stat.nbTests == 0
+                      ? 'Aucun test cette année'
+                      : '${stat.nbTests} test(s) passé(s) : '
+                            '${stat.nbReussis} réussi(s), ${stat.nbEchoues} échoué(s)',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Couleurs.texteSecondaire,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (stat.nbTests > 0)
+            Text(
+              '${stat.tauxReussite.round()} %',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: stat.tauxReussite >= seuilReussite * 100
+                    ? couleurReussi
+                    : couleurEchoue,
+                fontFeatures: chiffresAlignes,
+              ),
+            ),
+        ],
       ),
     );
   }

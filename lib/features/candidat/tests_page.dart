@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/erreurs.dart';
 import '../../core/router.dart';
+import '../../core/theme.dart';
 import '../../core/widgets.dart';
 import '../test/test_repository.dart';
 
@@ -78,23 +79,32 @@ class _TestsPageState extends ConsumerState<TestsPage> {
             await _tests;
           },
           child: ContenuCentre(
-            largeurMax: 700,
+            largeurMax: 820,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: margesPage(context),
               children: [
-                Text(
-                  'Choisissez une discipline. Chaque test ne peut être passé '
-                  "qu'une seule fois.",
-                  style: Theme.of(context).textTheme.bodyLarge,
+                const EnTete(
+                  titre: 'Mes tests',
+                  description:
+                      'Choisissez une discipline. Chaque test ne '
+                      "peut être passé qu'une seule fois.",
                 ),
-                const SizedBox(height: 16),
-                for (final test in tests)
-                  _CarteTest(
-                    test: test,
-                    commencer: () => _commencer(test),
-                    reprendre: () =>
-                        context.go(Routes.test(test.disciplineId)),
+                Panneau(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < tests.length; i++) ...[
+                        if (i > 0) const Divider(),
+                        _LigneTest(
+                          test: tests[i],
+                          commencer: () => _commencer(tests[i]),
+                          reprendre: () =>
+                              context.go(Routes.test(tests[i].disciplineId)),
+                        ),
+                      ],
+                    ],
                   ),
+                ),
               ],
             ),
           ),
@@ -104,8 +114,9 @@ class _TestsPageState extends ConsumerState<TestsPage> {
   }
 }
 
-class _CarteTest extends StatelessWidget {
-  const _CarteTest({
+/// Une discipline dans la liste : nom, état, et l'action possible.
+class _LigneTest extends StatelessWidget {
+  const _LigneTest({
     required this.test,
     required this.commencer,
     required this.reprendre,
@@ -117,14 +128,22 @@ class _CarteTest extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final String sousTitre;
     final Widget bouton;
+    Pastille? statut;
     if (test.termine) {
+      final reussi = estReussi(test.score ?? 0, test.total ?? 0);
       sousTitre = 'Déjà passé – score ${test.score}/${test.total}';
+      statut = Pastille(
+        reussi ? 'Réussi' : 'Non réussi',
+        ton: reussi ? TonPastille.reussite : TonPastille.alerte,
+      );
       bouton = const FilledButton(onPressed: null, child: Text('Commencer'));
     } else if (test.enCours) {
       sousTitre = 'Test commencé, pas encore terminé';
-      bouton = FilledButton.tonal(
+      statut = const Pastille('En cours');
+      bouton = FilledButton(
         onPressed: reprendre,
         child: const Text('Reprendre'),
       );
@@ -133,31 +152,42 @@ class _CarteTest extends StatelessWidget {
       bouton = const FilledButton(onPressed: null, child: Text('Commencer'));
     } else {
       sousTitre = '${test.nbQuestions} questions chronométrées';
-      bouton = FilledButton(onPressed: commencer, child: const Text('Commencer'));
+      bouton = FilledButton(
+        onPressed: commencer,
+        child: const Text('Commencer'),
+      );
     }
 
-    return Card(
+    return Semantics(
+      container: true,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Row(
           children: [
-            Icon(
-              test.termine ? Icons.check_circle : Icons.quiz_outlined,
-              size: 36,
-              color: test.termine ? Colors.green : null,
-            ),
-            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(test.discipline,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  Text(sousTitre),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(test.discipline, style: theme.textTheme.titleLarge),
+                      ?statut,
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    sousTitre,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Couleurs.texteSecondaire,
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 16),
             bouton,
           ],
         ),

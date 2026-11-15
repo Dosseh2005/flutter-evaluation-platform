@@ -17,10 +17,10 @@ enum TypeQuestion {
 
   /// Lit le type depuis la base ou le JSON (`"radio"` / `"checkbox"`).
   static TypeQuestion depuis(String? valeur) => switch (valeur) {
-        'radio' => TypeQuestion.radio,
-        'checkbox' => TypeQuestion.checkbox,
-        _ => throw FormatException('type inconnu « $valeur »'),
-      };
+    'radio' => TypeQuestion.radio,
+    'checkbox' => TypeQuestion.checkbox,
+    _ => throw FormatException('type inconnu « $valeur »'),
+  };
 }
 
 /// Un choix de réponse.
@@ -52,9 +52,7 @@ class Question {
   /// Lit une ligne de la table `questions` avec ses `choix`
   /// (`select('*, choix(*)')`).
   factory Question.depuisBase(Map<String, dynamic> json) {
-    final choix = (json['choix'] as List)
-        .cast<Map<String, dynamic>>()
-        .toList()
+    final choix = (json['choix'] as List).cast<Map<String, dynamic>>().toList()
       ..sort((a, b) => (a['id'] as int).compareTo(b['id'] as int));
     return Question(
       id: json['id'] as int,
@@ -82,7 +80,8 @@ class Question {
     final temps = json['temps_limite_sec'];
     if (temps is! int) {
       throw FormatException(
-          'question $numero : « temps_limite_sec » doit être un nombre entier');
+        'question $numero : « temps_limite_sec » doit être un nombre entier',
+      );
     }
     return Question(
       enonce: (json['enonce'] ?? '').toString(),
@@ -121,11 +120,11 @@ class Question {
 
   /// Format JSON envoyé aux fonctions SQL (identique au fichier d'import).
   Map<String, dynamic> toJson() => {
-        'enonce': enonce.trim(),
-        'type': type.name,
-        'temps_limite_sec': tempsLimiteSec,
-        'choix': [for (final c in choix) c.toJson()],
-      };
+    'enonce': enonce.trim(),
+    'type': type.name,
+    'temps_limite_sec': tempsLimiteSec,
+    'choix': [for (final c in choix) c.toJson()],
+  };
 }
 
 /// Vérifie une question avant de l'enregistrer.
@@ -146,8 +145,10 @@ List<String> verifierQuestion(Question q) {
   }
   if (q.nbBonnes == 0) erreurs.add('Il faut au moins une bonne réponse');
   if (q.type == TypeQuestion.radio && q.nbBonnes > 1) {
-    erreurs.add('Une question à réponse unique doit avoir exactement une '
-        'bonne réponse');
+    erreurs.add(
+      'Une question à réponse unique doit avoir exactement une '
+      'bonne réponse',
+    );
   }
   return erreurs;
 }
@@ -159,7 +160,8 @@ List<String> verifierQuestion(Question q) {
 List<Question> lireFichierImport(Object? json) {
   if (json is! Map || json['questions'] is! List) {
     throw const FormatException(
-        'le fichier doit contenir une liste « questions »');
+      'le fichier doit contenir une liste « questions »',
+    );
   }
   final liste = json['questions'] as List;
   if (liste.isEmpty) {

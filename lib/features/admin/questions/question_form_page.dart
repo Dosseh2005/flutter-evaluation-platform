@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/erreurs.dart';
+import '../../../core/theme.dart';
 import '../../../core/widgets.dart';
 import 'question.dart';
 import 'questions_repository.dart';
@@ -10,7 +11,7 @@ import 'questions_repository.dart';
 /// Ligne de choix en cours d'édition dans le formulaire.
 class _ChoixEdite {
   _ChoixEdite(String texte, this.correct)
-      : controleur = TextEditingController(text: texte);
+    : controleur = TextEditingController(text: texte);
 
   final TextEditingController controleur;
   bool correct;
@@ -101,15 +102,15 @@ class _QuestionFormPageState extends ConsumerState<QuestionFormPage> {
   }
 
   Question _questionSaisie() => Question(
-        id: widget.question?.id,
-        enonce: _enonce.text.trim(),
-        type: _type,
-        tempsLimiteSec: int.tryParse(_temps.text) ?? 0,
-        choix: [
-          for (final c in _choix)
-            Choix(texte: c.controleur.text.trim(), correct: c.correct),
-        ],
-      );
+    id: widget.question?.id,
+    enonce: _enonce.text.trim(),
+    type: _type,
+    tempsLimiteSec: int.tryParse(_temps.text) ?? 0,
+    choix: [
+      for (final c in _choix)
+        Choix(texte: c.controleur.text.trim(), correct: c.correct),
+    ],
+  );
 
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) return;
@@ -119,8 +120,12 @@ class _QuestionFormPageState extends ConsumerState<QuestionFormPage> {
 
     final erreurs = verifierQuestion(question);
     if (erreurs.isNotEmpty) {
-      afficherMessage(messenger, erreurs.join('\n'),
-          erreur: true, couleurErreur: couleurErreur);
+      afficherMessage(
+        messenger,
+        erreurs.join('\n'),
+        erreur: true,
+        couleurErreur: couleurErreur,
+      );
       return;
     }
 
@@ -133,8 +138,12 @@ class _QuestionFormPageState extends ConsumerState<QuestionFormPage> {
       afficherMessage(messenger, 'Question enregistrée');
       Navigator.of(context).pop(true);
     } catch (e) {
-      afficherMessage(messenger, messageErreur(e),
-          erreur: true, couleurErreur: couleurErreur);
+      afficherMessage(
+        messenger,
+        messageErreur(e),
+        erreur: true,
+        couleurErreur: couleurErreur,
+      );
       if (mounted) setState(() => _envoiEnCours = false);
     }
   }
@@ -152,95 +161,144 @@ class _QuestionFormPageState extends ConsumerState<QuestionFormPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: margesPage(context),
           children: [
             ContenuCentre(
-              largeurMax: 700,
+              largeurMax: 760,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextFormField(
-                    controller: _enonce,
-                    decoration: const InputDecoration(labelText: 'Énoncé *'),
-                    maxLines: 3,
-                    minLines: 1,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? "L'énoncé est obligatoire"
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<TypeQuestion>(
-                    initialValue: _type,
-                    isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Type *'),
-                    items: [
-                      for (final t in TypeQuestion.values)
-                        DropdownMenuItem(value: t, child: Text(t.libelle)),
-                    ],
-                    onChanged: (t) => _changerType(t!),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _temps,
-                    decoration: const InputDecoration(
-                      labelText: 'Temps limite (secondes) *',
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0
-                        ? 'Le temps doit être supérieur à 0'
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Choix de réponse (cocher la ou les bonnes réponses)',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  for (var i = 0; i < _choix.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: _choix[i].correct,
-                            onChanged: (v) => _basculerCorrect(i, v ?? false),
+                  Panneau(
+                    titre: 'La question',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextFormField(
+                          controller: _enonce,
+                          decoration: const InputDecoration(
+                            labelText: 'Énoncé *',
                           ),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _choix[i].controleur,
-                              decoration:
-                                  InputDecoration(labelText: 'Choix ${i + 1}'),
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Choix vide'
-                                  : null,
+                          maxLines: 3,
+                          minLines: 1,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? "L'énoncé est obligatoire"
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<TypeQuestion>(
+                          initialValue: _type,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Type *',
+                          ),
+                          items: [
+                            for (final t in TypeQuestion.values)
+                              DropdownMenuItem(
+                                value: t,
+                                child: Text(t.libelle),
+                              ),
+                          ],
+                          onChanged: (t) => _changerType(t!),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _temps,
+                          decoration: const InputDecoration(
+                            labelText: 'Temps limite (secondes) *',
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          validator: (v) => (int.tryParse(v ?? '') ?? 0) <= 0
+                              ? 'Le temps doit être supérieur à 0'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Panneau(
+                    titre: 'Réponses proposées',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _type == TypeQuestion.radio
+                              ? 'Cochez la bonne réponse (une seule).'
+                              : 'Cochez toutes les bonnes réponses.',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Couleurs.texteSecondaire),
+                        ),
+                        const SizedBox(height: 16),
+                        for (var i = 0; i < _choix.length; i++)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Tooltip(
+                                  message: 'Bonne réponse',
+                                  child: Checkbox(
+                                    value: _choix[i].correct,
+                                    activeColor: Couleurs.reussite,
+                                    onChanged: (v) =>
+                                        _basculerCorrect(i, v ?? false),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _choix[i].controleur,
+                                    decoration: InputDecoration(
+                                      labelText: 'Choix ${i + 1}',
+                                    ),
+                                    validator: (v) =>
+                                        (v == null || v.trim().isEmpty)
+                                        ? 'Choix vide'
+                                        : null,
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Supprimer ce choix',
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: _choix.length <= 2
+                                      ? null
+                                      : () => setState(() {
+                                          _choix
+                                              .removeAt(i)
+                                              .controleur
+                                              .dispose();
+                                        }),
+                                ),
+                              ],
                             ),
                           ),
-                          IconButton(
-                            tooltip: 'Supprimer ce choix',
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: _choix.length <= 2
-                                ? null
-                                : () => setState(() {
-                                      _choix.removeAt(i).controleur.dispose();
-                                    }),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => setState(
+                              () => _choix.add(_ChoixEdite('', false)),
+                            ),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Ajouter un choix'),
                           ),
-                        ],
-                      ),
-                    ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: () =>
-                          setState(() => _choix.add(_ChoixEdite('', false))),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Ajouter un choix'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _envoiEnCours ? null : _enregistrer,
-                    child: Text(_envoiEnCours ? 'Enregistrement…' : 'Enregistrer'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Annuler'),
+                      ),
+                      const SizedBox(width: 12),
+                      FilledButton(
+                        onPressed: _envoiEnCours ? null : _enregistrer,
+                        child: Text(
+                          _envoiEnCours ? 'Enregistrement…' : 'Enregistrer',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

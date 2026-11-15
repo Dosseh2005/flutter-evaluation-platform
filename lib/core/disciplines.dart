@@ -32,5 +32,6 @@ class DisciplinesRepository {
 }
 
 /// Fournit le [DisciplinesRepository].
-final disciplinesRepositoryProvider =
-    Provider<DisciplinesRepository>((ref) => DisciplinesRepository());
+final disciplinesRepositoryProvider = Provider<DisciplinesRepository>(
+  (ref) => DisciplinesRepository(),
+);

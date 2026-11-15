@@ -48,7 +48,9 @@ String? validerAge(String? valeur) {
 
 /// Mot de passe obligatoire d'au moins [motDePasseMin] caractères.
 String? validerMotDePasse(String? valeur) {
-  if (valeur == null || valeur.isEmpty) return 'Le mot de passe est obligatoire';
+  if (valeur == null || valeur.isEmpty) {
+    return 'Le mot de passe est obligatoire';
+  }
   if (valeur.length < motDePasseMin) {
     return 'Au moins $motDePasseMin caractères';
   }

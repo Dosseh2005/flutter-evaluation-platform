@@ -38,6 +38,19 @@ Suivi des tâches : [Tableau Trello – Plateforme d'évaluation EduScrum](https
 | Import JSON | file_picker |
 | Dates | intl |
 
+## Design
+
+Identité « salle d'examen » : encre sur papier, sobre et lisible, pour qu'un candidat reste concentré sur ses questions.
+
+| Élément | Choix |
+|---|---|
+| Couleurs | encre `#1B2A4A` (titres, boutons), papier `#F6F7F9` (fond), vert `#0F7B6C` (réussi), rouge `#B42318` (échoué, chrono urgent) |
+| Police | IBM Plex Sans, intégrée à l'appli (`assets/fonts`, licence SIL OFL) ; chiffres alignés pour le chrono et les scores |
+| Élément fort | l'écran du test façon feuille de réponses : réponses A, B, C, D, progression question par question, chrono en grand qui passe en rouge sous 6 secondes |
+| Mise en page | connexion en deux colonnes sur ordinateur ; menu latéral pour l'admin ; tout s'adapte au téléphone |
+
+Toutes les couleurs et tailles de texte sont définies à un seul endroit : `lib/core/theme.dart`.
+
 ## Structure du dépôt
 
 ```

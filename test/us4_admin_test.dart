@@ -14,14 +14,15 @@ void main() {
       initialLocation: Routes.admin,
       routes: [
         GoRoute(path: Routes.admin, builder: (_, _) => const AdminHomePage()),
-        for (final r in [
-          Routes.adminQuestions,
-          Routes.adminTableauDeBord,
-          Routes.adminStatistiques,
+        for (final s in [
+          SectionAdmin.questions,
+          SectionAdmin.tableauDeBord,
+          SectionAdmin.statistiques,
         ])
           GoRoute(
-            path: r,
-            builder: (_, _) => AdminScaffold(titre: r, corps: const SizedBox()),
+            path: s.route,
+            builder: (_, _) => AdminScaffold(
+                titre: s.route, section: s, corps: const SizedBox()),
           ),
       ],
     );

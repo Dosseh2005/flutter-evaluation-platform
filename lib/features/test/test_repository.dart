@@ -17,14 +17,14 @@ class TestDisponible {
 
   /// Lit une ligne renvoyée par `mes_tests()`.
   factory TestDisponible.fromJson(Map<String, dynamic> json) => TestDisponible(
-        disciplineId: json['discipline_id'] as int,
-        discipline: json['discipline'] as String,
-        nbQuestions: json['nb_questions'] as int,
-        tentativeId: json['tentative_id'] as int?,
-        score: json['score'] as int?,
-        total: json['total'] as int?,
-        termine: json['termine'] as bool? ?? false,
-      );
+    disciplineId: json['discipline_id'] as int,
+    discipline: json['discipline'] as String,
+    nbQuestions: json['nb_questions'] as int,
+    tentativeId: json['tentative_id'] as int?,
+    score: json['score'] as int?,
+    total: json['total'] as int?,
+    termine: json['termine'] as bool? ?? false,
+  );
 
   /// Identifiant de la discipline.
   final int disciplineId;
@@ -66,17 +66,17 @@ class QuestionTest {
 
   /// Lit l'objet JSON renvoyé par la fonction SQL `question_suivante`.
   factory QuestionTest.fromJson(Map<String, dynamic> json) => QuestionTest(
-        id: json['id'] as int,
-        enonce: json['enonce'] as String,
-        plusieursReponses: json['type'] == 'checkbox',
-        numero: json['numero'] as int,
-        total: json['total'] as int,
-        tempsRestantSec: json['temps_restant_sec'] as int,
-        choix: [
-          for (final c in (json['choix'] as List? ?? const []))
-            (id: c['id'] as int, texte: c['texte'] as String),
-        ],
-      );
+    id: json['id'] as int,
+    enonce: json['enonce'] as String,
+    plusieursReponses: json['type'] == 'checkbox',
+    numero: json['numero'] as int,
+    total: json['total'] as int,
+    tempsRestantSec: json['temps_restant_sec'] as int,
+    choix: [
+      for (final c in (json['choix'] as List? ?? const []))
+        (id: c['id'] as int, texte: c['texte'] as String),
+    ],
+  );
 
   /// Identifiant de la question.
   final int id;
@@ -114,15 +114,18 @@ class TestRepository {
 
   /// Démarre le test d'une discipline et renvoie l'id de la tentative.
   /// Refusé par le serveur si le test a déjà été passé.
-  Future<int> commencer(int disciplineId) async =>
-      await supabase.rpc('commencer_test',
-          params: {'p_discipline_id': disciplineId}) as int;
+  Future<int> commencer(int disciplineId) async => await supabase.rpc(
+    'commencer_test',
+    params: {'p_discipline_id': disciplineId},
+  ) as int;
 
   /// Question suivante, ou `null` quand le test est terminé (le serveur
   /// calcule alors le score).
   Future<QuestionTest?> questionSuivante(int tentativeId) async {
-    final json = await supabase.rpc('question_suivante',
-        params: {'p_tentative_id': tentativeId});
+    final json = await supabase.rpc(
+      'question_suivante',
+      params: {'p_tentative_id': tentativeId},
+    );
     return json == null
         ? null
         : QuestionTest.fromJson(json as Map<String, dynamic>);
@@ -130,11 +133,14 @@ class TestRepository {
 
   /// Envoie la réponse du candidat (liste vide = pas de réponse).
   Future<void> repondre(int tentativeId, int questionId, List<int> choixIds) =>
-      supabase.rpc('repondre', params: {
-        'p_tentative_id': tentativeId,
-        'p_question_id': questionId,
-        'p_choix_ids': choixIds,
-      });
+      supabase.rpc(
+        'repondre',
+        params: {
+          'p_tentative_id': tentativeId,
+          'p_question_id': questionId,
+          'p_choix_ids': choixIds,
+        },
+      );
 
   /// Score final d'une tentative terminée.
   Future<({int score, int total})> resultat(int tentativeId) async {
@@ -148,8 +154,9 @@ class TestRepository {
 }
 
 /// Fournit le [TestRepository].
-final testRepositoryProvider =
-    Provider<TestRepository>((ref) => TestRepository());
+final testRepositoryProvider = Provider<TestRepository>(
+  (ref) => TestRepository(),
+);
 
 /// Pourcentage de réussite minimum pour qu'un test soit « réussi »
 /// (même valeur que `p_seuil` dans la fonction SQL `stats_reussite`).
