@@ -1,0 +1,60 @@
+{
+  "discipline": "Algorithmes",
+  "questions": [
+    {
+      "enonce": "Quelle est la complexité de la recherche dichotomique dans un tableau trié de n éléments ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "O(log n)", "correct": true },
+        { "texte": "O(n)", "correct": false },
+        { "texte": "O(n log n)", "correct": false },
+        { "texte": "O(1)", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Combien de fois la boucle « pour i de 1 à 10 par pas de 2 » s'exécute-t-elle ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "5", "correct": true },
+        { "texte": "10", "correct": false },
+        { "texte": "4", "correct": false },
+        { "texte": "6", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Parmi ces structures de données, lesquelles suivent le principe « premier entré, premier sorti » (FIFO) ?",
+      "type": "checkbox",
+      "temps_limite_sec": 40,
+      "choix": [
+        { "texte": "File (queue)", "correct": true },
+        { "texte": "Pile (stack)", "correct": false },
+        { "texte": "File d'attente d'impression", "correct": true },
+        { "texte": "Arbre binaire", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Que renvoie une fonction récursive factorielle(n) pour n = 4 ?",
+      "type": "radio",
+      "temps_limite_sec": 30,
+      "choix": [
+        { "texte": "24", "correct": true },
+        { "texte": "16", "correct": false },
+        { "texte": "10", "correct": false },
+        { "texte": "4", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Parmi ces algorithmes de tri, lesquels ont une complexité moyenne en O(n log n) ?",
+      "type": "checkbox",
+      "temps_limite_sec": 45,
+      "choix": [
+        { "texte": "Tri fusion", "correct": true },
+        { "texte": "Tri rapide", "correct": true },
+        { "texte": "Tri à bulles", "correct": false },
+        { "texte": "Tri par insertion", "correct": false }
+      ]
+    }
+  ]
+}

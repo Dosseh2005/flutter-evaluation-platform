@@ -1,0 +1,60 @@
+{
+  "discipline": "HTML/CSS",
+  "questions": [
+    {
+      "enonce": "Quelle balise HTML crée un lien hypertexte ?",
+      "type": "radio",
+      "temps_limite_sec": 20,
+      "choix": [
+        { "texte": "<a>", "correct": true },
+        { "texte": "<link>", "correct": false },
+        { "texte": "<href>", "correct": false },
+        { "texte": "<url>", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Quelle propriété CSS change la couleur du texte ?",
+      "type": "radio",
+      "temps_limite_sec": 20,
+      "choix": [
+        { "texte": "color", "correct": true },
+        { "texte": "font-color", "correct": false },
+        { "texte": "text-color", "correct": false },
+        { "texte": "background-color", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Parmi ces balises, lesquelles sont des balises sémantiques HTML5 ?",
+      "type": "checkbox",
+      "temps_limite_sec": 40,
+      "choix": [
+        { "texte": "<header>", "correct": true },
+        { "texte": "<article>", "correct": true },
+        { "texte": "<div>", "correct": false },
+        { "texte": "<nav>", "correct": true }
+      ]
+    },
+    {
+      "enonce": "Quel sélecteur CSS cible un élément ayant l'id « menu » ?",
+      "type": "radio",
+      "temps_limite_sec": 25,
+      "choix": [
+        { "texte": "#menu", "correct": true },
+        { "texte": ".menu", "correct": false },
+        { "texte": "menu", "correct": false },
+        { "texte": "*menu", "correct": false }
+      ]
+    },
+    {
+      "enonce": "Quelles valeurs de la propriété « display » permettent de créer une mise en page flexible ou en grille ?",
+      "type": "checkbox",
+      "temps_limite_sec": 40,
+      "choix": [
+        { "texte": "flex", "correct": true },
+        { "texte": "grid", "correct": true },
+        { "texte": "block", "correct": false },
+        { "texte": "inline", "correct": false }
+      ]
+    }
+  ]
+}
