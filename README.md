@@ -3,6 +3,8 @@
 Plateforme d'évaluation en ligne : les candidats créent un compte, passent un test unique et chronométré par discipline (Java, Algorithmes, HTML/CSS) et suivent leurs scores sur leur profil. L'administrateur gère les questions (formulaire ou import JSON), consulte les résultats et les taux de réussite en camemberts.
 
 Projet réalisé en groupe de 4 en EduScrum (Daily, DoD, DoF, Rétrospective).
+**Installation pas à pas : voir [docs/INSTALLATION.md](docs/INSTALLATION.md)** (à lire avant de lancer l'application).
+
 Suivi des tâches : [Tableau Trello – Plateforme d'évaluation EduScrum](https://trello.com/b/E4wkDNXr/the-flutter-project-plateforme-d%C3%A9valuation-eduscrum)
 
 ## Équipe
